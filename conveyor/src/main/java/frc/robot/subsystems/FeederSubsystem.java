@@ -14,11 +14,19 @@ public class FeederSubsystem extends SubsystemBase {
     public void initialize() {
     }
 
-    public void start() {
-        m_motor.set(1.0);
+    boolean running = false;
+
+    public void feed(double speed) {
+        if ( !running ) {
+          System.out.println("Starting feeder");
+          running = true;
+        }
+        m_motor.set(speed);
     }
 
     public void stop() {
+        System.out.println("Stopping feeder");
+        running = false;
         m_motor.set(0.0);
     }
 

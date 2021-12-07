@@ -5,4 +5,6 @@ public class Constants {
     public static final int eyeSensorChannel = 0;
 
     public static final int kDriverControllerPort = 0;
+
+    public static final double maxFeederMotorSpeed = 0.3;
 }
