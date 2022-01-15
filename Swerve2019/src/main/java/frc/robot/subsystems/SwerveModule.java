@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
@@ -56,14 +57,10 @@ public class SwerveModule {
     m_driveMotor = new CANSparkMax(driveMotorChannel, MotorType.kBrushless);
     m_turningMotor = new WPI_VictorSPX(turningMotorChannel);
     m_turningMotor.setNeutralMode(NeutralMode.Coast);
-    //this.m_driveEncoder = new Encoder(driveEncoderPorts[0], driveEncoderPorts[1]);
     this.m_driveEncoder = m_driveMotor.getEncoder();
 
-    //this.m_turningInput = new AnalogInput(turningEncoderPorts[0]);
     this.m_turningEncoder = new AnalogInput(turningAnalogPort);
     this.m_zeroAngle = zeroAngle;
-
-   // this.m_turningEncoder = new Encoder(turningEncoderPorts[0], turningEncoderPorts[1]);
 
     // Set the distance per pulse for the drive encoder. We can simply use the
     // distance traveled for one rotation of the wheel divided by the encoder
@@ -134,7 +131,8 @@ public class SwerveModule {
 
     // Calculate the turning motor output from the turning PID controller.
    // m_driveMotor.set(driveOutput);
-    m_turningMotor.set(turnOutput);
+   m_turningMotor.set(turnOutput);
+   //m_turningMotor.set(ControlMode.Velocity, turnOutput);
   }
 
   /** Zeros all the SwerveModule encoders. */
