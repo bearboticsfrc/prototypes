@@ -64,8 +64,8 @@ public class SwerveModule {
     m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
     m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
 
-    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 1);
-    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 1);
+    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 10);
+    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 10);
 
 
     m_turningMotor = new WPI_VictorSPX(turningMotorChannel);
@@ -80,6 +80,10 @@ public class SwerveModule {
     // distance traveled for one rotation of the wheel divided by the encoder
     // resolution.
     //m_driveEncoder.setDistancePerPulse(ModuleConstants.kDriveEncoderDistancePerPulse);
+
+    m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction * (1.0 / 60.0)); // RPM to units per second
+    //m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction); // RPM to units per second
+
 
     // Set whether drive encoder should be reversed or not
     //m_driveEncoder.setReverseDirection(driveEncoderReversed);
@@ -149,7 +153,7 @@ public class SwerveModule {
 
     // Calculate the turning motor output from the turning PID controller.
     m_driveMotor.set(driveOutput);
-     m_turningMotor.set(turnOutput);
+    m_turningMotor.set(turnOutput);
     //m_turningMotor.set(ControlMode.Velocity, turnOutput);
   }
 
