@@ -19,44 +19,39 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 public final class Constants {
   public static final class DriveConstants {
     public static final int kFrontLeftDriveMotorPort = 12;
-    public static final int kRearLeftDriveMotorPort = 3;
+    public static final int kBackLeftDriveMotorPort = 3;
     public static final int kFrontRightDriveMotorPort = 14;
-    public static final int kRearRightDriveMotorPort = 15;
+    public static final int kBackRightDriveMotorPort = 15;
 
     public static final int kFrontLeftTurningMotorPort = 11;
-    public static final int kRearLeftTurningMotorPort = 5;
+    public static final int kBackLeftTurningMotorPort = 5;
     public static final int kFrontRightTurningMotorPort = 8;
-    public static final int kRearRightTurningMotorPort = 9;
+    public static final int kBackRightTurningMotorPort = 9;
 
     public static final int kFrontLeftTurningInputPort = 3;
-    public static final int kRearLeftTurningInputPort = 2;
+    public static final int kBackLeftTurningInputPort = 2;
     public static final int kFrontRightTurningInputPort = 0;
-    public static final int kRearRightTurningInputPort = 1;
-
-    public static final int[] kFrontLeftTurningEncoderPorts = new int[] {0, 1}; // 3
-    public static final int[] kRearLeftTurningEncoderPorts = new int[] {2, 3};  // 2
-    public static final int[] kFrontRightTurningEncoderPorts = new int[] {4, 5};// 0
-    public static final int[] kRearRightTurningEncoderPorts = new int[] {6, 7}; // 1
+    public static final int kBackRightTurningInputPort = 1;
 
     public static final boolean kFrontLeftTurningEncoderReversed = false;
-    public static final boolean kRearLeftTurningEncoderReversed = true;
+    public static final boolean kBackLeftTurningEncoderReversed = true;
     public static final boolean kFrontRightTurningEncoderReversed = false;
-    public static final boolean kRearRightTurningEncoderReversed = true;
+    public static final boolean kBackRightTurningEncoderReversed = true;
 
     public static final boolean kFrontLeftDriveEncoderReversed = false;
-    public static final boolean kRearLeftDriveEncoderReversed = true;
+    public static final boolean kBackLeftDriveEncoderReversed = true;
     public static final boolean kFrontRightDriveEncoderReversed = false;
-    public static final boolean kRearRightDriveEncoderReversed = true;
+    public static final boolean kBackRightDriveEncoderReversed = true;
 
     public static final double kFrontLeftZeroAngle = 48.0;
-    public static final double kRearLeftZeroAngle = 272.0;
+    public static final double kBackLeftZeroAngle = 272.0;
     public static final double kFrontRightZeroAngle = 134.0;
-    public static final double kRearRightZeroAngle = 314.0;
+    public static final double kBackRightZeroAngle = 314.0;
     
 
-    public static final double kTrackWidth = 0.5;
+    public static final double kTrackWidth = 0.311;
     // Distance between centers of right and left wheels on robot
-    public static final double kWheelBase = 0.7;
+    public static final double kWheelBase = 0.311;
     // Distance between front and back wheels on robot
     public static final SwerveDriveKinematics kDriveKinematics =
         new SwerveDriveKinematics(
@@ -75,7 +70,7 @@ public final class Constants {
     public static final double kvVoltSecondsPerMeter = 0.8;
     public static final double kaVoltSecondsSquaredPerMeter = 0.15;
 
-    public static final double kMaxSpeedMetersPerSecond = 3;
+    public static final double kMaxSpeedMetersPerSecond = 1;
   }
 
   public static final class ModuleConstants {
@@ -94,7 +89,7 @@ public final class Constants {
 
     public static final double kPModuleTurningController = 1;
 
-    public static final double kPModuleDriveController = 1;
+    public static final double kPModuleDriveController = .1;
   }
 
   public static final class OIConstants {

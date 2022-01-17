@@ -6,6 +6,9 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -23,16 +26,18 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kFrontLeftTurningInputPort,
           DriveConstants.kFrontLeftDriveEncoderReversed,
           DriveConstants.kFrontLeftTurningEncoderReversed,
-          DriveConstants.kFrontLeftZeroAngle);
+          DriveConstants.kFrontLeftZeroAngle,
+          "FL");
 
-  private final SwerveModule m_rearLeft =
+  private final SwerveModule m_backLeft =
       new SwerveModule(
-          DriveConstants.kRearLeftDriveMotorPort,
-          DriveConstants.kRearLeftTurningMotorPort,
-          DriveConstants.kRearLeftTurningInputPort,
-          DriveConstants.kRearLeftDriveEncoderReversed,
-          DriveConstants.kRearLeftTurningEncoderReversed,
-          DriveConstants.kRearLeftZeroAngle);
+          DriveConstants.kBackLeftDriveMotorPort,
+          DriveConstants.kBackLeftTurningMotorPort,
+          DriveConstants.kBackLeftTurningInputPort,
+          DriveConstants.kBackLeftDriveEncoderReversed,
+          DriveConstants.kBackLeftTurningEncoderReversed,
+          DriveConstants.kBackLeftZeroAngle,
+          "BL");
 
   private final SwerveModule m_frontRight =
       new SwerveModule(
@@ -41,16 +46,18 @@ public class DriveSubsystem extends SubsystemBase {
           DriveConstants.kFrontRightTurningInputPort,
           DriveConstants.kFrontRightDriveEncoderReversed,
           DriveConstants.kFrontRightTurningEncoderReversed,
-          DriveConstants.kFrontRightZeroAngle);
+          DriveConstants.kFrontRightZeroAngle,
+          "FR");
 
-  private final SwerveModule m_rearRight =
+  private final SwerveModule m_backRight =
       new SwerveModule(
-          DriveConstants.kRearRightDriveMotorPort,
-          DriveConstants.kRearRightTurningMotorPort,
-          DriveConstants.kRearRightTurningInputPort,
-          DriveConstants.kRearRightDriveEncoderReversed,
-          DriveConstants.kRearRightTurningEncoderReversed,
-          DriveConstants.kRearRightZeroAngle);
+          DriveConstants.kBackRightDriveMotorPort,
+          DriveConstants.kBackRightTurningMotorPort,
+          DriveConstants.kBackRightTurningInputPort,
+          DriveConstants.kBackRightDriveEncoderReversed,
+          DriveConstants.kBackRightTurningEncoderReversed,
+          DriveConstants.kBackRightZeroAngle,
+          "BR");
 
   // The gyro sensor
   //private final Gyro m_gyro = new ADXRS450_Gyro();
@@ -61,7 +68,11 @@ public class DriveSubsystem extends SubsystemBase {
       new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d());
 
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {}
+  public DriveSubsystem() {
+
+    Shuffleboard.getTab("DriveSubsystem").add(m_gyro).withWidget(BuiltInWidgets.kGyro);
+
+  }
 
   @Override
   public void periodic() {
@@ -69,9 +80,10 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.update(
         m_gyro.getRotation2d(),
         m_frontLeft.getState(),
-        m_rearLeft.getState(),
+        m_backLeft.getState(),
         m_frontRight.getState(),
-        m_rearRight.getState());
+        m_backRight.getState());
+    outputToSmartDashboard();    
   }
 
   /**
@@ -92,6 +104,15 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.resetPosition(pose, m_gyro.getRotation2d());
   }
 
+  public static double deadband(double input) {
+		return deadband(input, 0.035);
+	}
+
+	public static double deadband(double input, double buffer) {
+		if (Math.abs(input) < buffer) return 0;
+		return input;
+	}
+
   /**
    * Method to drive the robot using joystick info.
    *
@@ -102,6 +123,15 @@ public class DriveSubsystem extends SubsystemBase {
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+    xSpeed = deadband(xSpeed);
+    ySpeed = deadband(ySpeed);
+    rot = deadband(rot);  
+    SmartDashboard.putNumber("controller x", xSpeed);
+    SmartDashboard.putNumber("controller y", ySpeed);
+    SmartDashboard.putNumber("controller rot", rot);
+
+
+
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             fieldRelative
@@ -111,8 +141,8 @@ public class DriveSubsystem extends SubsystemBase {
         swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
-    m_rearLeft.setDesiredState(swerveModuleStates[2]);
-    m_rearRight.setDesiredState(swerveModuleStates[3]);
+    m_backLeft.setDesiredState(swerveModuleStates[2]);
+    m_backRight.setDesiredState(swerveModuleStates[3]);
   }
 
   /**
@@ -125,16 +155,16 @@ public class DriveSubsystem extends SubsystemBase {
         desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
     m_frontLeft.setDesiredState(desiredStates[0]);
     m_frontRight.setDesiredState(desiredStates[1]);
-    m_rearLeft.setDesiredState(desiredStates[2]);
-    m_rearRight.setDesiredState(desiredStates[3]);
+    m_backLeft.setDesiredState(desiredStates[2]);
+    m_backRight.setDesiredState(desiredStates[3]);
   }
 
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
     m_frontLeft.resetEncoders();
-    m_rearLeft.resetEncoders();
+    m_backLeft.resetEncoders();
     m_frontRight.resetEncoders();
-    m_rearRight.resetEncoders();
+    m_backRight.resetEncoders();
   }
 
   /** Zeroes the heading of the robot. */
@@ -159,4 +189,13 @@ public class DriveSubsystem extends SubsystemBase {
   public double getTurnRate() {
     return m_gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
+
+  public void outputToSmartDashboard() {
+    SmartDashboard.putNumber("Gyro", m_gyro.getAngle());
+    m_frontLeft.outputToSmartDashboard();
+    m_frontRight.outputToSmartDashboard();
+    m_backLeft.outputToSmartDashboard();
+    m_backRight.outputToSmartDashboard();
+  }
+
 }
