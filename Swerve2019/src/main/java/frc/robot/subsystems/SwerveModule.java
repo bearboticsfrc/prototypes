@@ -61,11 +61,11 @@ public class SwerveModule {
     m_driveMotor = new CANSparkMax(driveMotorChannel, MotorType.kBrushless);
     m_driveMotor.restoreFactoryDefaults();
     //m_driveMotor.setSmartCurrentLimit(stallLimit, freeLimit, limitRPM);
-    m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-    m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
+    //m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
+    //m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
 
-    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 10);
-    m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 10);
+    //m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 10);
+    //m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 10);
 
 
     m_turningMotor = new WPI_VictorSPX(turningMotorChannel);
@@ -81,7 +81,8 @@ public class SwerveModule {
     // resolution.
     //m_driveEncoder.setDistancePerPulse(ModuleConstants.kDriveEncoderDistancePerPulse);
 
-    m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction * (1.0 / 60.0)); // RPM to units per second
+    double conversionFactor = ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction * ( 1.0/60.0); // RPM to units per second
+    m_driveEncoder.setVelocityConversionFactor(conversionFactor); // RPM to units per second
     //m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction); // RPM to units per second
 
 
