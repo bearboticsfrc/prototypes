@@ -70,7 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
-
+    zeroHeading();
     Shuffleboard.getTab("DriveSubsystem").add(m_gyro).withWidget(BuiltInWidgets.kGyro);
 
   }
@@ -109,7 +109,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public static double deadband(double input) {
-		return deadband(input, 0.035);
+		return deadband(input, 0.06);
 	}
 
 	public static double deadband(double input, double buffer) {
@@ -195,7 +195,7 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   public void outputToSmartDashboard() {
-    SmartDashboard.putNumber("Gyro", m_gyro.getAngle());
+    SmartDashboard.putNumber("Gyro", getHeading());
     m_frontLeft.outputToSmartDashboard();
     m_frontRight.outputToSmartDashboard();
     m_backLeft.outputToSmartDashboard();

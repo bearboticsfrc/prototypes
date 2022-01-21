@@ -12,8 +12,10 @@ import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -44,6 +46,7 @@ public class SwerveModule {
               ModuleConstants.kMaxModuleAngularSpeedRadiansPerSecond,
               ModuleConstants.kMaxModuleAngularAccelerationRadiansPerSecondSquared));
 
+  private final SimpleMotorFeedforward m_driveFeedforward = new SimpleMotorFeedforward(1,1);
   /**
    * Constructs a SwerveModule.
    *
@@ -145,15 +148,19 @@ public class SwerveModule {
     final double driveOutput =
         m_drivePIDController.calculate(m_driveEncoder.getVelocity(), state.speedMetersPerSecond);
 
+        final double driveFeedforward = m_driveFeedforward.calculate(state.speedMetersPerSecond);
     // Calculate the turning motor output from the turning PID controller.
     final var turnOutput =
         m_turningPIDController.calculate(Math.toRadians(getAngle()), state.angle.getRadians());
-        
+    
+    double driveValue = MathUtil.clamp(driveOutput + driveFeedforward, -0.4, 0.4);    
+    
     SmartDashboard.putNumber(String.format("%s drive output", m_moduleName), driveOutput);
     SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
-
+    SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     // Calculate the turning motor output from the turning PID controller.
-    m_driveMotor.set(driveOutput);
+    
+    m_driveMotor.set(driveValue);
     m_turningMotor.set(turnOutput);
     //m_turningMotor.set(ControlMode.Velocity, turnOutput);
   }
