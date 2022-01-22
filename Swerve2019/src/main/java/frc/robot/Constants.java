@@ -91,6 +91,9 @@ public final class Constants {
     public static final double kPModuleTurningController = 1;
 
     public static final double kPModuleDriveController = .1;
+
+    public static final double kPTargetTurn = .02;
+
   }
 
   public static final class OIConstants {

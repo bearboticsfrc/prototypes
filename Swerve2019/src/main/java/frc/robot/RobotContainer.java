@@ -14,9 +14,11 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.TargetDrive;
 import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -35,8 +37,16 @@ public class RobotContainer {
   //private final nosubsystem m_robotDrive = new nosubsystem();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
+ 
+
+  private final LimeLight m_limeLight = new LimeLight();
+
+  int shutUp = 2;
+
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+
+  private final TargetDrive m_targetDrive = new TargetDrive(m_robotDrive, m_driverController, m_limeLight);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -70,7 +80,14 @@ public class RobotContainer {
   private void configureButtonBindings() {
 
     new JoystickButton(m_driverController, Button.kA.value)
-      .whenPressed(() -> m_robotDrive.zeroHeading());
+      .whenPressed(() -> m_robotDrive.zeroHeading()); 
+
+    new JoystickButton(m_driverController, Button.kB.value)
+      .whenPressed(() -> m_limeLight.toggleLEDs());
+
+    new JoystickButton(m_driverController, Button.kX.value)
+      .toggleWhenPressed(m_targetDrive);
+
   }
 
   /**
@@ -81,4 +98,13 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     return null;
   }
+
+public void robotPeriodic() {
+
+  SmartDashboard.putBoolean("Target Mode", m_targetDrive.isScheduled());
+
 }
+
+}
+
+

@@ -155,9 +155,9 @@ public class SwerveModule {
     
     double driveValue = MathUtil.clamp(driveOutput + driveFeedforward, -0.2, 0.2);    
     
-    SmartDashboard.putNumber(String.format("%s drive output", m_moduleName), driveOutput);
-    SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
-    SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
+    //SmartDashboard.putNumber(String.format("%s drive output", m_moduleName), driveOutput);
+    //SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
+    //SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     // Calculate the turning motor output from the turning PID controller.
     
     m_driveMotor.set(driveValue);
