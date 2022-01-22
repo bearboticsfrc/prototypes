@@ -153,7 +153,7 @@ public class SwerveModule {
     final var turnOutput =
         m_turningPIDController.calculate(Math.toRadians(getAngle()), state.angle.getRadians());
     
-    double driveValue = MathUtil.clamp(driveOutput + driveFeedforward, -0.4, 0.4);    
+    double driveValue = MathUtil.clamp(driveOutput + driveFeedforward, -0.2, 0.2);    
     
     SmartDashboard.putNumber(String.format("%s drive output", m_moduleName), driveOutput);
     SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);

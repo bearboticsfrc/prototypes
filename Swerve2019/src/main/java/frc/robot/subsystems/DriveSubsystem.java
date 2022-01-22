@@ -9,6 +9,7 @@ import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -108,14 +109,7 @@ public class DriveSubsystem extends SubsystemBase {
     m_odometry.resetPosition(pose, m_gyro.getRotation2d());
   }
 
-  public static double deadband(double input) {
-		return deadband(input, 0.06);
-	}
-
-	public static double deadband(double input, double buffer) {
-		if (Math.abs(input) < buffer) return 0;
-		return input;
-	}
+  
 
   /**
    * Method to drive the robot using joystick info.
@@ -127,9 +121,9 @@ public class DriveSubsystem extends SubsystemBase {
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
-    xSpeed = deadband(xSpeed);
-    ySpeed = deadband(ySpeed);
-    rot = deadband(rot);  
+    xSpeed = MathUtil.applyDeadband(xSpeed, 0.1);
+    ySpeed = MathUtil.applyDeadband(ySpeed, 0.1);
+    rot = MathUtil.applyDeadband(rot, 0.1);  
     SmartDashboard.putNumber("controller x", xSpeed);
     SmartDashboard.putNumber("controller y", ySpeed);
     SmartDashboard.putNumber("controller rot", rot);
