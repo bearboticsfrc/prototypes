@@ -47,7 +47,7 @@ public class RobotContainer {
         // A split-stick arcade command, with forward/backward controlled by the left
         // hand, and turning controlled by the right.
         new RunCommand(
-            () -> m_feeder.feed(m_driverController.getY(GenericHID.Hand.kLeft)),
+            () -> m_feeder.feed(m_driverController.getLeftY()),
             m_feeder));
   }
 
@@ -59,10 +59,10 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
 
-    new JoystickButton(m_driverController, Button.kBumperLeft.value)
+    new JoystickButton(m_driverController, Button.kLeftBumper.value)
         .whenPressed(m_feedCommand);
 
-    new JoystickButton(m_driverController, Button.kBumperRight.value)
+    new JoystickButton(m_driverController, Button.kRightBumper.value)
         .whenPressed(m_feedCommand::cancel);
 
     new JoystickButton(m_driverController, Button.kA.value)
