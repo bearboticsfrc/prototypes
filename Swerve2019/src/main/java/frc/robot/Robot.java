@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import io.github.oblarg.oblog.Logger;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -28,6 +29,10 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+
+    // The first argument is the root container
+    // The second argument is whether logging and config should be given separate tabs
+    Logger.configureLoggingAndConfig(m_robotContainer, false);
   }
 
   /**
@@ -45,6 +50,7 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     m_robotContainer.robotPeriodic();
+    Logger.updateEntries();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

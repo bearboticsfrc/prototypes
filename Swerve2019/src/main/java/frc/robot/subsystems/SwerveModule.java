@@ -20,10 +20,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
+import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import frc.robot.Constants.ModuleConstants;
+import io.github.oblarg.oblog.Loggable;
+import io.github.oblarg.oblog.annotations.Log;
 
-public class SwerveModule {
+public class SwerveModule implements Loggable {
   private final CANSparkMax m_driveMotor;
   private final WPI_VictorSPX m_turningMotor;
 
@@ -121,6 +125,7 @@ public class SwerveModule {
     return m_turningEncoder.getVoltage() * 360.0 / 5.0;
   }
 
+  @Log(name = "Angle")
   public double getAngle() {
     double temp =  getRawAngle() - m_zeroAngle;
 
@@ -179,4 +184,20 @@ public class SwerveModule {
     SmartDashboard.putNumber(String.format("%s velocity", m_moduleName), m_driveEncoder.getVelocity());
     SmartDashboard.putNumber(String.format("%s drive current", m_moduleName), m_driveMotor.getOutputCurrent());
   }
+
+  @Override
+  public String configureLogName() {
+      return m_moduleName;
+  }
+
+  @Override
+  public LayoutType configureLayoutType() {
+      return BuiltInLayouts.kGrid;
+  }
+
+  @Override
+  public int[] configureLayoutSize() {
+      int[] size = {3,4};
+      return size;
+    }
 }
