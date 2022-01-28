@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.Constants.ModuleConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -144,8 +145,10 @@ public class SwerveModule implements Loggable {
 
     //desiredState.angle = Rotation2d.fromDegrees(0);
     //desiredState.speedMetersPerSecond = 0.0;
-    SmartDashboard.putNumber(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
-    SmartDashboard.putNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
+    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+
+    tab.add(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
+    tab.add(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
 
     // Optimize the reference state to avoid spinning further than 90 degrees
     SwerveModuleState state =
@@ -180,11 +183,13 @@ public class SwerveModule implements Loggable {
   }
 
   public void outputToSmartDashboard() {
-    SmartDashboard.putNumber(String.format("%s angle", m_moduleName), getAngle());
+    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+
+    tab.add(String.format("%s angle", m_moduleName), getAngle());
     //SmartDashboard.putNumber(String.format("%s module drive distance", m_moduleName), module.getCurrentDistance());
     //SmartDashboard.putString(String.format("%s module position", m_moduleName), module.getCurrentPosition().toString());
-    SmartDashboard.putNumber(String.format("%s velocity", m_moduleName), m_driveEncoder.getVelocity());
-    SmartDashboard.putNumber(String.format("%s drive current", m_moduleName), m_driveMotor.getOutputCurrent());
+    tab.add(String.format("%s velocity", m_moduleName), m_driveEncoder.getVelocity());
+    tab.add(String.format("%s drive current", m_moduleName), m_driveMotor.getOutputCurrent());
   }
 
   @Override

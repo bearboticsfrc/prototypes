@@ -4,9 +4,10 @@
 
 package frc.robot.commands;
 
+import java.util.function.DoubleSupplier;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.LimeLight;
@@ -16,21 +17,25 @@ import frc.robot.subsystems.DriveSubsystem;
 
 public class TargetDrive extends CommandBase { 
   private DriveSubsystem m_driveSubsystem;
-  private XboxController m_driverController;
   private LimeLight m_limeLight;
 
+  private DoubleSupplier m_xSupplier;
+  private DoubleSupplier m_ySupplier;
+
   private final PIDController m_turnPIDController =
-  new PIDController(ModuleConstants.kPTargetTurn, 0, 0);
+    new PIDController(ModuleConstants.kPTargetTurn, 0, 0);
 
 
   /** Creates a new TargetDrive. */
-  public TargetDrive(DriveSubsystem driveSubsystem, XboxController driverController,LimeLight limeLight ) {
+  public TargetDrive(DriveSubsystem driveSubsystem,
+                     LimeLight limeLight,
+                     DoubleSupplier ySupplier,
+                     DoubleSupplier xSupplier) {
 
     m_driveSubsystem = driveSubsystem;
-    m_driverController = driverController;
     m_limeLight = limeLight;
-
-    // Use addRequirements() here to declare subsystem dependencies.
+    m_xSupplier = xSupplier;
+    m_ySupplier = ySupplier;
 
     addRequirements(m_driveSubsystem);
 
@@ -59,14 +64,11 @@ public class TargetDrive extends CommandBase {
     SmartDashboard.putNumber("degrees to turn", degreesToTurn);
     SmartDashboard.putNumber("setpoint", setPoint);
 
-
     m_driveSubsystem.drive(
-      m_driverController.getLeftY(),
-      m_driverController.getLeftX(),
+      m_ySupplier.getAsDouble(),
+      m_xSupplier.getAsDouble(),
       -turnOutput,
       true);
-
-
   }
 
   // Called once the command ends or is interrupted.

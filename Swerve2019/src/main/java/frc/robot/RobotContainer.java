@@ -37,16 +37,12 @@ public class RobotContainer {
   //private final nosubsystem m_robotDrive = new nosubsystem();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
- 
-
   private final LimeLight m_limeLight = new LimeLight();
-
-  int shutUp = 2;
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
-  private final TargetDrive m_targetDrive = new TargetDrive(m_robotDrive, m_driverController, m_limeLight);
+  private final TargetDrive m_targetDrive = new TargetDrive(m_robotDrive, m_limeLight, m_driverController::getLeftY, m_driverController::getLeftX);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -55,8 +51,6 @@ public class RobotContainer {
 
     // Configure default commands
     m_robotDrive.setDefaultCommand(
-       // new TestEncodersCommand(m_robotDrive) );
-
         // The left stick controls translation of the robot.
         // Turning is controlled by the X axis of the right stick.
         new RunCommand(
@@ -67,8 +61,6 @@ public class RobotContainer {
                     m_driverController.getRightX(),
                     true),
             m_robotDrive));
-
-    
   }
 
   /**

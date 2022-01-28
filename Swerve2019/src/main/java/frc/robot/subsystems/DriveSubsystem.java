@@ -4,11 +4,14 @@
 
 package frc.robot.subsystems;
 
+import java.util.Map;
+
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.drive.Vector2d;
@@ -16,6 +19,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Constants.DriveConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
@@ -64,18 +68,29 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
           "BR");
 
   // The gyro sensor
-  //private final Gyro m_gyro = new ADXRS450_Gyro();
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
+
+  private double kMaxSpeed = 3.0; // 3 meters per second
+  private double m_maxSpeed = kMaxSpeed;
 
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry =
       new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d());
 
+  ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+
+  NetworkTableEntry maxSpeedEntry =  
+        tab.add("Drive Speed", kMaxSpeed)
+        .withWidget(BuiltInWidgets.kNumberSlider)
+        .withPosition(9,0)
+        .withSize(2,1)
+        .withProperties(Map.of("Max", 4))
+        .getEntry();
+
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
     zeroHeading();
-    Shuffleboard.getTab("DriveSubsystem").add(m_gyro).withWidget(BuiltInWidgets.kGyro);
-
+    Shuffleboard.getTab("Drive System").add(m_gyro).withWidget(BuiltInWidgets.kGyro);
   }
 
   @Override
@@ -88,6 +103,7 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
         m_frontRight.getState(),
         m_backRight.getState());
     outputToSmartDashboard();    
+    m_maxSpeed = maxSpeedEntry.getDouble(kMaxSpeed);
   }
 
   /**
@@ -126,19 +142,17 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
     xSpeed = MathUtil.applyDeadband(xSpeed, 0.1);
     ySpeed = MathUtil.applyDeadband(ySpeed, 0.1);
     rot = MathUtil.applyDeadband(rot, 0.1);  
-    SmartDashboard.putNumber("controller x", xSpeed);
-    SmartDashboard.putNumber("controller y", ySpeed);
-    SmartDashboard.putNumber("controller rot", rot);
-
-
-
+    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    tab.add("controller x", xSpeed);
+    tab.add("controller y", ySpeed);
+    tab.add("controller rot", rot);
+    
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
                 : new ChassisSpeeds(xSpeed, ySpeed, rot));
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, m_maxSpeed);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_backLeft.setDesiredState(swerveModuleStates[2]);
@@ -151,8 +165,7 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
    * @param desiredStates The desired SwerveModule states.
    */
   public void setModuleStates(SwerveModuleState[] desiredStates) {
-    SwerveDriveKinematics.desaturateWheelSpeeds(
-        desiredStates, DriveConstants.kMaxSpeedMetersPerSecond);
+    SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, m_maxSpeed);
     m_frontLeft.setDesiredState(desiredStates[0]);
     m_frontRight.setDesiredState(desiredStates[1]);
     m_backLeft.setDesiredState(desiredStates[2]);
