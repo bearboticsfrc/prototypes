@@ -17,10 +17,11 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.robot.Constants.DriveConstants;
+import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class DriveSubsystem extends SubsystemBase {
+public class DriveSubsystem extends SubsystemBase implements Loggable{
   // Robot swerve modules
   private final SwerveModule m_frontLeft =
       new SwerveModule(
@@ -64,7 +65,6 @@ public class DriveSubsystem extends SubsystemBase {
 
   // The gyro sensor
   //private final Gyro m_gyro = new ADXRS450_Gyro();
-  @Log
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
 
   // Odometry class for tracking robot pose

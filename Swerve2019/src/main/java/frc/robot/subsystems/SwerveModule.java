@@ -34,6 +34,7 @@ public class SwerveModule implements Loggable {
   private final RelativeEncoder m_driveEncoder;
 
   private final AnalogInput m_turningEncoder;
+  @Log
   private double m_zeroAngle;
   private String m_moduleName;
 
@@ -80,6 +81,7 @@ public class SwerveModule implements Loggable {
     this.m_driveEncoder = m_driveMotor.getEncoder();
 
     this.m_turningEncoder = new AnalogInput(turningAnalogPort);
+    
     this.m_zeroAngle = zeroAngle;
     this.m_moduleName = moduleName;
 
