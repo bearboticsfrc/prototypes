@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -70,7 +71,7 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   // The gyro sensor
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
 
-  private double kMaxSpeed = .5; // 3 meters per second
+  private double kMaxSpeed = 5; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
 
   // Odometry class for tracking robot pose
@@ -85,7 +86,11 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
         .withSize(2,1)
         .withProperties(Map.of("min", 0, "max", kMaxSpeed))
         .getEntry();
-
+        
+  private final SlewRateLimiter xLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+  private final SlewRateLimiter yLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+  private final SlewRateLimiter turningLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
+       
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
     zeroHeading();
@@ -138,15 +143,17 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
    */
   @SuppressWarnings("ParameterName")
   public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
-    xSpeed = MathUtil.applyDeadband(xSpeed, 0.1);
-    ySpeed = MathUtil.applyDeadband(ySpeed, 0.1);
-    rot = MathUtil.applyDeadband(rot, 0.1);  
+    xSpeed = xLimiter.calculate(MathUtil.applyDeadband(xSpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
+    ySpeed = yLimiter.calculate(MathUtil.applyDeadband(ySpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
+    rot = turningLimiter.calculate(MathUtil.applyDeadband(rot, 0.1)) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;  
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     //tab.add("controller x", xSpeed);
     //tab.add("controller y", ySpeed);
     //tab.add("controller rot", rot);
     
     var swerveModuleStates =
+
+    
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
@@ -190,7 +197,9 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
-    return m_gyro.getRotation2d().getDegrees();
+    double temp =  m_gyro.getRotation2d().getDegrees();
+    temp -= Math.floor(temp/360.0) * 360.0;
+    return temp;
   }
 
   /**

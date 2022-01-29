@@ -69,6 +69,7 @@ public class RobotContainer {
             m_robotDrive));
     ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     tab.addBoolean("Target Mode", m_targetDrive::isScheduled);
+    m_limeLight.setLEDs(false);
   }
 
   /**

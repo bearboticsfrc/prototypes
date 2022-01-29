@@ -54,8 +54,6 @@ public class LimeLight {
     }
 
     public void toggleLEDs() {
-
-
         if (m_ledON) {
             m_ledON = false;
 
@@ -65,7 +63,17 @@ public class LimeLight {
 
             NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(3);
         }
-
     }
+    public void setLEDs(boolean value) {
+        if (value) {
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(3);
+            m_ledON = true;
+        } else {
+            NetworkTableInstance.getDefault().getTable("limelight").getEntry("ledMode").setNumber(1);
+            m_ledON = false;
+        }  
+    }
+    
+    
 
 }

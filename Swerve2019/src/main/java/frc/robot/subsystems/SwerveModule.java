@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.DriveConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
@@ -52,7 +53,7 @@ public class SwerveModule { // implements Loggable {
               ModuleConstants.kMaxModuleAngularSpeedRadiansPerSecond,
               ModuleConstants.kMaxModuleAngularAccelerationRadiansPerSecondSquared));
 
-  private final SimpleMotorFeedforward m_driveFeedforward = new SimpleMotorFeedforward(1,1);
+  private final SimpleMotorFeedforward m_driveFeedforward = new SimpleMotorFeedforward(1,.5);
   /**
    * Constructs a SwerveModule.
    *
@@ -114,13 +115,13 @@ public class SwerveModule { // implements Loggable {
     // to be continuous.
     m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
-    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
 
-    tab.addNumber(String.format("%s angle", m_moduleName), this::getAngle);
+    //tab.addNumber(String.format("%s angle", m_moduleName), this::getAngle);
     //SmartDashboard.putNumber(String.format("%s module drive distance", m_moduleName), module.getCurrentDistance());
     //SmartDashboard.putString(String.format("%s module position", m_moduleName), module.getCurrentPosition().toString());
-    tab.addNumber(String.format("%s velocity", m_moduleName), m_driveEncoder::getVelocity);
-    tab.addNumber(String.format("%s drive current", m_moduleName), m_driveMotor::getOutputCurrent);
+    //tab.addNumber(String.format("%s velocity", m_moduleName), m_driveEncoder::getVelocity);
+    //tab.addNumber(String.format("%s drive current", m_moduleName), m_driveMotor::getOutputCurrent);
 
   }
 
@@ -151,13 +152,19 @@ public class SwerveModule { // implements Loggable {
    * @param desiredState Desired state with speed and angle.
    */
   public void setDesiredState(SwerveModuleState desiredState) {
-
+    if (Math.abs(desiredState.speedMetersPerSecond) < 0.001) {
+      stop();
+      return;
+  }
     //desiredState.angle = Rotation2d.fromDegrees(0);
     //desiredState.speedMetersPerSecond = 0.0;
-    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
 
-    //tab.addNumber(String.format("%s desired angle", m_moduleName), desiredState.angle::getDegrees());
+    SmartDashboard.putNumber(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
+    SmartDashboard.putNumber(String.format("%s angle", m_moduleName), getAngle());
+    SmartDashboard.putNumber(String.format("%s raw angle", m_moduleName), getRawAngle());
     //tab.addNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
+    SmartDashboard.putNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
 
     // Optimize the reference state to avoid spinning further than 90 degrees
     SwerveModuleState state =
@@ -167,15 +174,17 @@ public class SwerveModule { // implements Loggable {
     final double driveOutput =
         m_drivePIDController.calculate(m_driveEncoder.getVelocity(), state.speedMetersPerSecond);
 
-        final double driveFeedforward = m_driveFeedforward.calculate(state.speedMetersPerSecond);
+    final double driveFeedforward = m_driveFeedforward.calculate(state.speedMetersPerSecond);
     // Calculate the turning motor output from the turning PID controller.
     final var turnOutput =
         m_turningPIDController.calculate(Math.toRadians(getAngle()), state.angle.getRadians());
     
-    double driveValue = MathUtil.clamp(driveOutput + driveFeedforward, -0.2, 0.2);    
+    double driveValue = MathUtil.clamp(driveOutput + state.speedMetersPerSecond, -0.2, 0.2);    
     
-    //SmartDashboard.putNumber(String.format("%s drive output", m_moduleName), driveOutput);
-    //SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
+    driveValue = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
+    SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
+    //SmartDashboard.putNumber(String.format("%s drive feed forward", m_moduleName), driveFeedforward);
+    SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
     //SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     // Calculate the turning motor output from the turning PID controller.
     
@@ -183,6 +192,11 @@ public class SwerveModule { // implements Loggable {
     m_turningMotor.set(turnOutput);
     //m_turningMotor.set(ControlMode.Velocity, turnOutput);
   }
+
+  public void stop() {
+    m_driveMotor.set(0);
+    m_turningMotor.set(0);
+}
 
   /** Zeros all the SwerveModule encoders. */
   public void resetEncoders() {
