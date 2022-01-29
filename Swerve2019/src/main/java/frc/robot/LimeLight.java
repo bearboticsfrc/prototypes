@@ -53,6 +53,10 @@ public class LimeLight {
         m_LimelightDriveCommand = drive_cmd; */
     }
 
+    public boolean hasTargetLock() {
+        return m_LimelightHasValidTarget;
+    }
+    
     public void toggleLEDs() {
         if (m_ledON) {
             m_ledON = false;
