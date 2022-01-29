@@ -25,7 +25,7 @@ import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class DriveSubsystem extends SubsystemBase implements Loggable{
+public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   // Robot swerve modules
   private final SwerveModule m_frontLeft =
       new SwerveModule(
@@ -70,7 +70,7 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
   // The gyro sensor
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
 
-  private double kMaxSpeed = 3.0; // 3 meters per second
+  private double kMaxSpeed = .5; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
 
   // Odometry class for tracking robot pose
@@ -82,15 +82,14 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
   NetworkTableEntry maxSpeedEntry =  
         tab.add("Drive Speed", kMaxSpeed)
         .withWidget(BuiltInWidgets.kNumberSlider)
-        .withPosition(9,0)
         .withSize(2,1)
-        .withProperties(Map.of("Max", 4))
+        .withProperties(Map.of("min", 0, "max", kMaxSpeed))
         .getEntry();
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
     zeroHeading();
-    Shuffleboard.getTab("Drive System").add(m_gyro).withWidget(BuiltInWidgets.kGyro);
+   // tab.add("Gyro", m_gyro).withWidget(BuiltInWidgets.kGyro);
   }
 
   @Override
@@ -142,10 +141,10 @@ public class DriveSubsystem extends SubsystemBase implements Loggable{
     xSpeed = MathUtil.applyDeadband(xSpeed, 0.1);
     ySpeed = MathUtil.applyDeadband(ySpeed, 0.1);
     rot = MathUtil.applyDeadband(rot, 0.1);  
-    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
-    tab.add("controller x", xSpeed);
-    tab.add("controller y", ySpeed);
-    tab.add("controller rot", rot);
+    //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    //tab.add("controller x", xSpeed);
+    //tab.add("controller y", ySpeed);
+    //tab.add("controller rot", rot);
     
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(

@@ -32,7 +32,7 @@ public class Robot extends TimedRobot {
 
     // The first argument is the root container
     // The second argument is whether logging and config should be given separate tabs
-    Logger.configureLoggingAndConfig(m_robotContainer, false);
+    //Logger.configureLoggingAndConfig(m_robotContainer, false);
   }
 
   /**
@@ -50,7 +50,7 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     m_robotContainer.robotPeriodic();
-    Logger.updateEntries();
+    //Logger.updateEntries();
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

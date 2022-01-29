@@ -14,6 +14,8 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.XboxController.Button;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -61,6 +63,8 @@ public class RobotContainer {
                     m_driverController.getRightX(),
                     true),
             m_robotDrive));
+    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    tab.addBoolean("Target Mode", m_targetDrive::isScheduled);
   }
 
   /**
@@ -133,12 +137,11 @@ public class RobotContainer {
     
   }
 
-public void robotPeriodic() {
+  public void robotPeriodic() {
 
-  SmartDashboard.putBoolean("Target Mode", m_targetDrive.isScheduled());
+    //SmartDashboard.putBoolean("Target Mode", ());
 
-}
-
+  }
 }
 
 

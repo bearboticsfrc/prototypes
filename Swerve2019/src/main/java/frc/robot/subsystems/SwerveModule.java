@@ -28,7 +28,7 @@ import frc.robot.Constants.ModuleConstants;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 
-public class SwerveModule implements Loggable {
+public class SwerveModule { // implements Loggable {
   private final CANSparkMax m_driveMotor;
   private final WPI_VictorSPX m_turningMotor;
 
@@ -113,6 +113,15 @@ public class SwerveModule implements Loggable {
     // Limit the PID Controller's input range between -pi and pi and set the input
     // to be continuous.
     m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
+
+    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+
+    tab.addNumber(String.format("%s angle", m_moduleName), this::getAngle);
+    //SmartDashboard.putNumber(String.format("%s module drive distance", m_moduleName), module.getCurrentDistance());
+    //SmartDashboard.putString(String.format("%s module position", m_moduleName), module.getCurrentPosition().toString());
+    tab.addNumber(String.format("%s velocity", m_moduleName), m_driveEncoder::getVelocity);
+    tab.addNumber(String.format("%s drive current", m_moduleName), m_driveMotor::getOutputCurrent);
+
   }
 
   /**
@@ -147,8 +156,8 @@ public class SwerveModule implements Loggable {
     //desiredState.speedMetersPerSecond = 0.0;
     ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
 
-    tab.add(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
-    tab.add(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
+    //tab.addNumber(String.format("%s desired angle", m_moduleName), desiredState.angle::getDegrees());
+    //tab.addNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
 
     // Optimize the reference state to avoid spinning further than 90 degrees
     SwerveModuleState state =
@@ -183,28 +192,21 @@ public class SwerveModule implements Loggable {
   }
 
   public void outputToSmartDashboard() {
-    ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
-
-    tab.add(String.format("%s angle", m_moduleName), getAngle());
-    //SmartDashboard.putNumber(String.format("%s module drive distance", m_moduleName), module.getCurrentDistance());
-    //SmartDashboard.putString(String.format("%s module position", m_moduleName), module.getCurrentPosition().toString());
-    tab.add(String.format("%s velocity", m_moduleName), m_driveEncoder.getVelocity());
-    tab.add(String.format("%s drive current", m_moduleName), m_driveMotor.getOutputCurrent());
   }
 
-  @Override
-  public String configureLogName() {
-      return m_moduleName;
-  }
+  //@Override
+  //public String configureLogName() {
+  //    return m_moduleName;
+  //}
 
-  @Override
-  public LayoutType configureLayoutType() {
-      return BuiltInLayouts.kGrid;
-  }
+  //@Override
+  //public LayoutType configureLayoutType() {
+  //    return BuiltInLayouts.kGrid;
+  //}
 
-  @Override
-  public int[] configureLayoutSize() {
-      int[] size = {3,4};
-      return size;
-    }
+  //@Override
+  //public int[] configureLayoutSize() {
+  //    int[] size = {3,4};
+  //    return size;
+  //  }
 }
