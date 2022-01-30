@@ -49,10 +49,29 @@ public final class Constants {
     public static final double kBackRightZeroAngle = 314.0;
     
 
+    // Track Width Distance between centers of right and left wheels on robot
     public static final double kTrackWidth = 0.311;
-    // Distance between centers of right and left wheels on robot
+    // Wheel Base Distance between front and back wheels on robot
     public static final double kWheelBase = 0.311;
-    // Distance between front and back wheels on robot
+
+    public enum PivotPoint {
+      CENTER      (new Translation2d( 0.0, 0.0)),
+      FRONT_LEFT  (new Translation2d(kTrackWidth / 2, kWheelBase / 2)),
+      FRONT_RIGHT (new Translation2d(-kTrackWidth / 2, kWheelBase / 2)),
+      BACK_RIGHT  (new Translation2d(kTrackWidth / 2, -kWheelBase / 2)),
+      BACK_LEFT   (new Translation2d(-kTrackWidth /2 , -kWheelBase / 2));
+
+      private final Translation2d m_pivotPoint;
+
+      PivotPoint( Translation2d pivotPoint) {
+          this.m_pivotPoint = pivotPoint;
+      }
+
+      public Translation2d get() {
+        return m_pivotPoint;
+      }
+    }
+
     public static final SwerveDriveKinematics kDriveKinematics =
         new SwerveDriveKinematics(
             new Translation2d(kWheelBase / 2, kTrackWidth / 2),

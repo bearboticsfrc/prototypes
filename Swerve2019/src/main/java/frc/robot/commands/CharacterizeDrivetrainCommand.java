@@ -50,7 +50,7 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
         double autospeed = autoSpeedEntry.getDouble(0.0);
         priorAutospeed = autospeed;
 
-        drivetrain.drive(autospeed, 0.0, 0.0, false);
+        drivetrain.drive(autospeed, 0.0, 0.0, -1, false);
 
         telemetryData.add(now);
         telemetryData.add(autospeed * RobotController.getInputVoltage());
@@ -70,6 +70,6 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
 
         telemetryEntry.setString(b.toString());
 
-        drivetrain.drive(0.0, 0.0, 0.0, false);
+        drivetrain.drive(0.0, 0.0, 0.0, -1, false);
     }
 }

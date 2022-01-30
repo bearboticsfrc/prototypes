@@ -22,6 +22,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.DriveConstants.PivotPoint;
 import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -74,6 +75,8 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   private double kMaxSpeed = 5; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
 
+  private PivotPoint m_pivotPoint = PivotPoint.CENTER;
+
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry =
       new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d());
@@ -103,9 +106,9 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
     m_odometry.update(
         m_gyro.getRotation2d(),
         m_frontLeft.getState(),
-        m_backLeft.getState(),
         m_frontRight.getState(),
-        m_backRight.getState());
+        m_backRight.getState(),
+        m_backLeft.getState());
     outputToSmartDashboard();    
     m_maxSpeed = maxSpeedEntry.getDouble(kMaxSpeed);
   }
@@ -142,22 +145,21 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
    * @param fieldRelative Whether the provided x and y speeds are relative to the field.
    */
   @SuppressWarnings("ParameterName")
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+  public void drive(double xSpeed, double ySpeed, double rot, int pov, boolean fieldRelative) {
     xSpeed = xLimiter.calculate(MathUtil.applyDeadband(xSpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
     ySpeed = yLimiter.calculate(MathUtil.applyDeadband(ySpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
     rot = turningLimiter.calculate(MathUtil.applyDeadband(rot, 0.1)) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;  
+    setPivotPoint(getPivotPointByPOV(pov));
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     //tab.add("controller x", xSpeed);
     //tab.add("controller y", ySpeed);
     //tab.add("controller rot", rot);
     
     var swerveModuleStates =
-
-    
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             fieldRelative
                 ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
-                : new ChassisSpeeds(xSpeed, ySpeed, rot));
+                : new ChassisSpeeds(xSpeed, ySpeed, rot), m_pivotPoint.get());
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, m_maxSpeed);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
@@ -219,4 +221,22 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
     m_backRight.outputToSmartDashboard();
   }
 
+  public PivotPoint getPivotPointByPOV( int pov ) {
+    switch (pov) {
+      case 0:
+        return PivotPoint.FRONT_LEFT;
+      case 90:
+        return PivotPoint.FRONT_RIGHT;
+      case 180:
+        return PivotPoint.BACK_RIGHT;
+      case 270:
+        return PivotPoint.BACK_LEFT;
+      default:
+        return PivotPoint.CENTER;
+    }
+  }
+  
+  public void setPivotPoint(PivotPoint pivotPoint) {
+    m_pivotPoint = pivotPoint;
+  }
 }
