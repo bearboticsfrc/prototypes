@@ -18,10 +18,11 @@ public class AutoRotate extends CommandBase {
   private DriveSubsystem m_driveSubsystem;
 
   private final PIDController m_turnPIDController =
-    new PIDController(ModuleConstants.kPTargetTurn, 0, 0);
+    new PIDController(ModuleConstants.kPAutoTurn, 0, 0);
 
   private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 360.0);
   private int m_step = 0;
+  private double m_offset = 0.0;
 
   /** Creates a new TargetDrive. */
   public AutoRotate(DriveSubsystem driveSubsystem) {
@@ -32,13 +33,14 @@ public class AutoRotate extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_offset = m_driveSubsystem.getHeading();
     m_step = 0;
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double setPoint = m_degreeSetPoints.get(m_step);
+    double setPoint = m_degreeSetPoints.get(m_step) + m_offset;;
 
     double turnOutput = m_turnPIDController.calculate(m_driveSubsystem.getHeading(), setPoint);
 
@@ -60,11 +62,12 @@ public class AutoRotate extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
+    m_driveSubsystem.drive(0.0,0.0,0.0,-1,true);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return m_step < m_degreeSetPoints.size();
+    return m_step >= m_degreeSetPoints.size();
   }
 }

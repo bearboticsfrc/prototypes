@@ -148,7 +148,7 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   public void drive(double xSpeed, double ySpeed, double rot, int pov, boolean fieldRelative) {
     xSpeed = xLimiter.calculate(MathUtil.applyDeadband(xSpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
     ySpeed = yLimiter.calculate(MathUtil.applyDeadband(ySpeed, 0.1)) * DriveConstants.kMaxSpeedMetersPerSecond;
-    rot = turningLimiter.calculate(MathUtil.applyDeadband(rot, 0.1)) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond;  
+    rot = turningLimiter.calculate(MathUtil.applyDeadband(rot, 0.1)) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond * DriveConstants.kMaxSpeedMetersPerSecond;  
     setPivotPoint(getPivotPointByPOV(pov));
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     //tab.add("controller x", xSpeed);

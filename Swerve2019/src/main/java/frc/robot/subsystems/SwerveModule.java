@@ -160,11 +160,11 @@ public class SwerveModule { // implements Loggable {
     //desiredState.speedMetersPerSecond = 0.0;
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
 
-    SmartDashboard.putNumber(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
-    SmartDashboard.putNumber(String.format("%s angle", m_moduleName), getAngle());
-    SmartDashboard.putNumber(String.format("%s raw angle", m_moduleName), getRawAngle());
+    //SmartDashboard.putNumber(String.format("%s desired angle", m_moduleName), desiredState.angle.getDegrees());
+    //SmartDashboard.putNumber(String.format("%s angle", m_moduleName), getAngle());
+    //SmartDashboard.putNumber(String.format("%s raw angle", m_moduleName), getRawAngle());
     //tab.addNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
-    SmartDashboard.putNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
+    //SmartDashboard.putNumber(String.format("%s desired speed", m_moduleName), desiredState.speedMetersPerSecond);
 
     // Optimize the reference state to avoid spinning further than 90 degrees
     SwerveModuleState state =

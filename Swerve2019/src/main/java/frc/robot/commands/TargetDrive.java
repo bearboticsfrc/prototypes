@@ -44,13 +44,12 @@ public class TargetDrive extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_limeLight.setLEDs(true);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-
-    m_limeLight.setLEDs(true);
     m_limeLight.Update_Limelight_Tracking();
 
     double degreesToTurn = m_limeLight.m_LimelightSteerCommand;
@@ -66,8 +65,8 @@ public class TargetDrive extends CommandBase {
     SmartDashboard.putNumber("setpoint", setPoint);
 
     m_driveSubsystem.drive(
-      m_ySupplier.getAsDouble(),
-      m_xSupplier.getAsDouble(),
+      -m_ySupplier.getAsDouble(),
+      -m_xSupplier.getAsDouble(),
       -turnOutput,
       -1,
       true);

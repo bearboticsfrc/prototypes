@@ -93,7 +93,7 @@ public final class Constants {
     public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 2 * 2 * Math.PI;
     public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond / 4;
     public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 3;
-    public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 3;
+    public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 10;
 
   }
 
@@ -116,7 +116,9 @@ public final class Constants {
 
     public static final double kPModuleDriveController = .1;
 
-    public static final double kPTargetTurn = .02;
+    //public static final double kPTargetTurn = .02;
+    public static final double kPTargetTurn = .01;
+    public static final double kPAutoTurn = .1;
 
   }
 
