@@ -108,6 +108,10 @@ public class RobotContainer {
     new JoystickButton(m_driverController, Button.kX.value)
         .toggleWhenPressed(m_targetDrive);
 
+    new JoystickButton(m_driverController, Button.kRightBumper.value)
+        .whenPressed(() -> m_robotDrive.setTurboMode(true))
+        .whenReleased(() -> m_robotDrive.setTurboMode(false));
+
   }
 
   /**

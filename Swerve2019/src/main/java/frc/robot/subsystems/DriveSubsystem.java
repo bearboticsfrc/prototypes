@@ -75,6 +75,15 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   private double kMaxSpeed = 5; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
 
+  public void setTurboMode(boolean mode) {
+    if(mode) {
+      m_maxSpeed *= 2;
+    } else {
+      m_maxSpeed /= 2;
+    }
+    maxSpeedEntry.setDouble(m_maxSpeed);
+  }
+
   private PivotPoint m_pivotPoint = PivotPoint.CENTER;
 
   // Odometry class for tracking robot pose
