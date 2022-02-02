@@ -11,7 +11,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.LimeLight;
-import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
 
@@ -23,7 +23,7 @@ public class TargetDrive extends CommandBase {
   private DoubleSupplier m_ySupplier;
 
   private final PIDController m_turnPIDController =
-    new PIDController(ModuleConstants.kPTargetTurn, 0, 0);
+    new PIDController(AutoConstants.kPTargetTurn, AutoConstants.kITargetTurn, AutoConstants.kDTargetTurn);
 
 
   /** Creates a new TargetDrive. */
@@ -54,7 +54,7 @@ public class TargetDrive extends CommandBase {
 
     double degreesToTurn = m_limeLight.m_LimelightSteerCommand;
     
-    degreesToTurn = MathUtil.applyDeadband(degreesToTurn, 0.5);
+    degreesToTurn = MathUtil.applyDeadband(degreesToTurn, .25);
 
     double setPoint = m_driveSubsystem.getHeading() + degreesToTurn;
 
@@ -65,8 +65,8 @@ public class TargetDrive extends CommandBase {
     SmartDashboard.putNumber("setpoint", setPoint);
 
     m_driveSubsystem.drive(
-      -m_ySupplier.getAsDouble(),
-      -m_xSupplier.getAsDouble(),
+      -MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
+      -MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
       -turnOutput,
       -1,
       true);

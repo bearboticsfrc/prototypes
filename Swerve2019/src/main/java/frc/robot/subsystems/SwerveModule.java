@@ -4,11 +4,12 @@
 
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.REVLibError;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,6 +37,7 @@ public class SwerveModule { // implements Loggable {
   private final RelativeEncoder m_driveEncoder;
 
   private final AnalogInput m_turningEncoder;
+  
   @Log
   private double m_zeroAngle;
   private String m_moduleName;
@@ -59,6 +61,10 @@ public class SwerveModule { // implements Loggable {
    *
    * @param driveMotorChannel ID for the drive motor.
    * @param turningMotorChannel ID for the turning motor.
+   * @param turningAnalogPort serial port for the analog input
+   * @param driveEncoderReversed if the drive encoder should be reversed.
+   * @param zeroAngle default offset of the encoder to make the wheel at the correct starting position.
+   * @param moduleName Name (FL, FR, BL, BR)
    */
   public SwerveModule(
       int driveMotorChannel,
@@ -70,16 +76,13 @@ public class SwerveModule { // implements Loggable {
       String moduleName) {
     m_driveMotor = new CANSparkMax(driveMotorChannel, MotorType.kBrushless);
     m_driveMotor.restoreFactoryDefaults();
-    //m_driveMotor.setSmartCurrentLimit(stallLimit, freeLimit, limitRPM);
-    //m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kForward, true);
-    //m_driveMotor.enableSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, true);
-
-    //m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kForward, 10);
-    //m_driveMotor.setSoftLimit(CANSparkMax.SoftLimitDirection.kReverse, 10);
-
+    if (m_driveMotor.setIdleMode(IdleMode.kCoast) != REVLibError.kOk){
+      SmartDashboard.putString("Idle Mode", "Error");
+    }
 
     m_turningMotor = new WPI_VictorSPX(turningMotorChannel);
     m_turningMotor.setNeutralMode(NeutralMode.Coast);
+
     this.m_driveEncoder = m_driveMotor.getEncoder();
 
     this.m_turningEncoder = new AnalogInput(turningAnalogPort);
@@ -87,26 +90,17 @@ public class SwerveModule { // implements Loggable {
     this.m_zeroAngle = zeroAngle;
     this.m_moduleName = moduleName;
 
-    // Set the distance per pulse for the drive encoder. We can simply use the
-    // distance traveled for one rotation of the wheel divided by the encoder
-    // resolution.
-    //m_driveEncoder.setDistancePerPulse(ModuleConstants.kDriveEncoderDistancePerPulse);
-
-    double conversionFactor = ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction * ( 1.0/60.0); // RPM to units per second
-    m_driveEncoder.setVelocityConversionFactor(conversionFactor); // RPM to units per second
-    //m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kWheelDiameterMeters * Math.PI / ModuleConstants.kDriveGearReduction); // RPM to units per second
-
+    m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec); // RPM to units per second
+    m_driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRotationsPerMeter);
 
     // Set whether drive encoder should be reversed or not
-    //m_driveEncoder.setReverseDirection(driveEncoderReversed);
-    //m_driveEncoder.setInverted(driveEncoderReversed);
-
+    m_driveEncoder.setInverted(driveEncoderReversed);
 
     // Set the distance (in this case, angle) per pulse for the turning encoder.
     // This is the the angle through an entire rotation (2 * pi) divided by the
     // encoder resolution.
-   // m_turningEncoder.setDistancePerPulse(ModuleConstants.kTurningEncoderDistancePerPulse);
-   // m_turningEncoder.setDistancePerRotation(ModuleConstants.kTurningEncoderDistancePerPulse);
+    // m_turningEncoder.setDistancePerPulse(ModuleConstants.kTurningEncoderDistancePerPulse);
+    // m_turningEncoder.setDistancePerRotation(ModuleConstants.kTurningEncoderDistancePerPulse);
 
     // Set whether turning encoder should be reversed or not
     //m_turningEncoder.setReverseDirection(turningEncoderReversed);
@@ -116,13 +110,11 @@ public class SwerveModule { // implements Loggable {
     m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
-
     //tab.addNumber(String.format("%s angle", m_moduleName), this::getAngle);
     //SmartDashboard.putNumber(String.format("%s module drive distance", m_moduleName), module.getCurrentDistance());
     //SmartDashboard.putString(String.format("%s module position", m_moduleName), module.getCurrentPosition().toString());
     //tab.addNumber(String.format("%s velocity", m_moduleName), m_driveEncoder::getVelocity);
     //tab.addNumber(String.format("%s drive current", m_moduleName), m_driveMotor::getOutputCurrent);
-
   }
 
   /**
@@ -152,10 +144,12 @@ public class SwerveModule { // implements Loggable {
    * @param desiredState Desired state with speed and angle.
    */
   public void setDesiredState(SwerveModuleState desiredState) {
-    if (Math.abs(desiredState.speedMetersPerSecond) < 0.001) {
-      stop();
-      return;
-  }
+    //if (Math.abs(desiredState.speedMetersPerSecond) < 0.001) {
+    //  stop();
+    //  return;
+    //}
+
+
     //desiredState.angle = Rotation2d.fromDegrees(0);
     //desiredState.speedMetersPerSecond = 0.0;
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
@@ -182,15 +176,14 @@ public class SwerveModule { // implements Loggable {
     double driveValue = MathUtil.clamp(driveOutput + state.speedMetersPerSecond, -0.2, 0.2);    
     
     driveValue = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
-    SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
+   // SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     //SmartDashboard.putNumber(String.format("%s drive feed forward", m_moduleName), driveFeedforward);
-    SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
+   // SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);
     //SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     // Calculate the turning motor output from the turning PID controller.
     
     m_driveMotor.set(driveValue);
     m_turningMotor.set(turnOutput);
-    //m_turningMotor.set(ControlMode.Velocity, turnOutput);
   }
 
   public void stop() {
@@ -201,8 +194,8 @@ public class SwerveModule { // implements Loggable {
   /** Zeros all the SwerveModule encoders. */
   public void resetEncoders() {
     //m_driveEncoder.reset();
-    m_driveEncoder.setPosition(0);
     //m_turningEncoder.reset();
+    m_driveEncoder.setPosition(0);
   }
 
   public void outputToSmartDashboard() {

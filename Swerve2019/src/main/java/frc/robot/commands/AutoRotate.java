@@ -10,7 +10,7 @@ import java.util.List;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Constants.ModuleConstants;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 
 
@@ -18,7 +18,7 @@ public class AutoRotate extends CommandBase {
   private DriveSubsystem m_driveSubsystem;
 
   private final PIDController m_turnPIDController =
-    new PIDController(ModuleConstants.kPAutoTurn, 0, 0);
+    new PIDController(AutoConstants.kPAutoTurn, 0, 0);
 
   private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 360.0);
   private int m_step = 0;

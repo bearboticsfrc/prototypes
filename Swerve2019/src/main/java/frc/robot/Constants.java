@@ -7,6 +7,7 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -101,12 +102,15 @@ public final class Constants {
     public static final double kMaxModuleAngularSpeedRadiansPerSecond = 2 * Math.PI * 4;
     public static final double kMaxModuleAngularAccelerationRadiansPerSecondSquared = 2 * Math.PI * 16;
 
-    public static final int kEncoderCPR = 1024;
-    public static final double kWheelDiameterMeters = 0.1016;
+    //public static final int kEncoderCPR = 1024;
+    public static final int kEncoderCPR = 42;
+    public static final double kWheelDiameterMeters = Units.feetToMeters(4);// 0.1016;
     public static final double kDriveGearReduction = 6.67 / 1.0;
+    public static final double kDriveEncoderRotationsPerMeter = kWheelDiameterMeters * Math.PI / kDriveGearReduction;
     public static final double kDriveEncoderDistancePerPulse =
         // Assumes the encoders are directly mounted on the wheel shafts
-        (kWheelDiameterMeters * Math.PI) / kDriveGearReduction / (double) kEncoderCPR;
+        (kWheelDiameterMeters * Math.PI) * kDriveGearReduction / (double) kEncoderCPR;
+    public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRotationsPerMeter / 60;
 
     public static final double kTurningEncoderDistancePerPulse =
         // Assumes the encoders are on a 1:1 reduction with the module shaft.
@@ -115,11 +119,6 @@ public final class Constants {
     public static final double kPModuleTurningController = 1;
 
     public static final double kPModuleDriveController = .1;
-
-    //public static final double kPTargetTurn = .02;
-    public static final double kPTargetTurn = .01;
-    public static final double kPAutoTurn = .1;
-
   }
 
   public static final class OIConstants {
@@ -132,13 +131,22 @@ public final class Constants {
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
-    public static final double kPXController = 1;
-    public static final double kPYController = 1;
-    public static final double kPThetaController = 10;
+    public static final double kPXController = .1;
+    public static final double kPYController = .1;
+    public static final double kPThetaController = 1;
 
     // Constraint for the motion profilied robot angle controller
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
         new TrapezoidProfile.Constraints(
             kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);
+
+
+    // PID values for the rotation in the TargetDrive command
+    public static final double kPTargetTurn = .02;
+    public static final double kITargetTurn = 0.01;
+    public static final double kDTargetTurn = 0.0;
+
+    // P value used in the AutoRotate command
+    public static final double kPAutoTurn = .01;     
   }
 }
