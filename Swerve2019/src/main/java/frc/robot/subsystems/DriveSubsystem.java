@@ -27,7 +27,7 @@ import io.github.oblarg.oblog.Loggable;
 import io.github.oblarg.oblog.annotations.Log;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class DriveSubsystem extends SubsystemBase { // implements Loggable{
+public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
   // Robot swerve modules
   private final SwerveModule m_frontLeft =
       new SwerveModule(
@@ -110,7 +110,7 @@ public class DriveSubsystem extends SubsystemBase { // implements Loggable{
   }
 
   @Override
-  public void periodic() {
+  public void monitored_periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
         m_gyro.getRotation2d(),

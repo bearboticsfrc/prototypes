@@ -4,9 +4,11 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.MeasuredSubsystem;
 import io.github.oblarg.oblog.Logger;
 
 /**
@@ -29,6 +31,7 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+    MeasuredSubsystem.resetAllStats();
 
     // The first argument is the root container
     // The second argument is whether logging and config should be given separate tabs
@@ -54,7 +57,9 @@ public class Robot extends TimedRobot {
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    DriverStation.reportWarning(MeasuredSubsystem.getStats(), false);
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -62,6 +67,8 @@ public class Robot extends TimedRobot {
   /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
   @Override
   public void autonomousInit() {
+    MeasuredSubsystem.resetAllStats();
+
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     /*
@@ -90,6 +97,8 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    MeasuredSubsystem.resetAllStats();
+
   }
 
   /** This function is called periodically during operator control. */
