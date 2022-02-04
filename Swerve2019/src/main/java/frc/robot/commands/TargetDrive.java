@@ -10,14 +10,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.LimeLight;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 
 
 public class TargetDrive extends CommandBase { 
   private DriveSubsystem m_driveSubsystem;
-  private LimeLight m_limeLight;
+  private LimelightSubsystem m_limeLight;
 
   private DoubleSupplier m_xSupplier;
   private DoubleSupplier m_ySupplier;
@@ -28,7 +28,7 @@ public class TargetDrive extends CommandBase {
 
   /** Creates a new TargetDrive. */
   public TargetDrive(DriveSubsystem driveSubsystem,
-                     LimeLight limeLight,
+                     LimelightSubsystem limeLight,
                      DoubleSupplier ySupplier,
                      DoubleSupplier xSupplier) {
 
@@ -44,15 +44,15 @@ public class TargetDrive extends CommandBase {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_limeLight.setLEDs(true);
+    m_limeLight.enableLED();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    m_limeLight.Update_Limelight_Tracking();
+    //m_limeLight.Update_Limelight_Tracking();
 
-    double degreesToTurn = m_limeLight.m_LimelightSteerCommand;
+    double degreesToTurn = m_limeLight.getX();
     
     degreesToTurn = (Math.abs(degreesToTurn) < 0.5) ? 0.0 : degreesToTurn; 
 
@@ -75,7 +75,7 @@ public class TargetDrive extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_limeLight.setLEDs(false);
+    m_limeLight.disableLED();
   }
 
   // Returns true when the command should end.

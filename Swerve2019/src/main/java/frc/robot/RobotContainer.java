@@ -21,6 +21,7 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.commands.AutoRotate;
 import frc.robot.commands.TargetDrive;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.LimelightSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -40,7 +41,7 @@ public class RobotContainer {
   // private final nosubsystem m_robotDrive = new nosubsystem();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
 
-  private final LimeLight m_limeLight = new LimeLight();
+  private final LimelightSubsystem m_limeLight = new LimelightSubsystem();
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -77,8 +78,8 @@ public class RobotContainer {
             m_robotDrive));
     ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     tab.addBoolean("Target Mode", m_targetDrive::isScheduled);
-    tab.addBoolean("Target Lock", m_limeLight::hasTargetLock);
-    m_limeLight.setLEDs(false);
+    tab.addBoolean("Target Lock", m_limeLight::valid);
+    m_limeLight.disableLED();
   }
 
   private void configureAutonomousChooser() {
@@ -168,7 +169,7 @@ public class RobotContainer {
   }
 
   public void periodic() {
-      if (m_targetDrive.isScheduled() && !m_limeLight.hasTargetLock()) {
+      if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
         m_driverController.setRumble(RumbleType.kLeftRumble, .5);
       } else {
         m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);

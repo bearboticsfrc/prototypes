@@ -57,7 +57,6 @@ public class LimelightSubsystem extends MeasuredSubsystem {
         filteredX = x_iir.calculate(x);
         filteredArea = area_iir.calculate(area);
         ledStatus = (leds.getDouble(0) == 3) ? (true) : (false);
-
     }
 
     public double getX() {
@@ -98,6 +97,13 @@ public class LimelightSubsystem extends MeasuredSubsystem {
         leds.setNumber(3);
         ledStatus = true;
         booleanLeds.setBoolean(ledStatus);
+    }
+
+    public void toggleLEDs() {
+        if (ledStatus)
+            disableLED();
+        else
+            enableLED();
     }
 
     public boolean valid() {
