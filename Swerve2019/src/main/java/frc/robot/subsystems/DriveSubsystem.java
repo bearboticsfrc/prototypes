@@ -158,12 +158,14 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
     xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kMaxSpeedMetersPerSecond;
     ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kMaxSpeedMetersPerSecond;
     rot = turningLimiter.calculate(rot) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond * DriveConstants.kMaxSpeedMetersPerSecond;  
+    //rot = turningLimiter.calculate(rot) * DriveConstants.kMaxSpeedMetersPerSecond;  
     setPivotPoint(getPivotPointByPOV(pov));
     //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     //tab.add("controller x", xSpeed);
     //tab.add("controller y", ySpeed);
     //tab.add("controller rot", rot);
-    
+    SmartDashboard.putNumber("rot", rot);
+
     var swerveModuleStates =
         DriveConstants.kDriveKinematics.toSwerveModuleStates(
             fieldRelative

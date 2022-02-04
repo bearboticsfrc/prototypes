@@ -9,6 +9,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController.Button;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -164,5 +165,13 @@ public class RobotContainer {
     // Run path following command, then stop at the end.
     return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, -1, false));
 
+  }
+
+  public void periodic() {
+      if (m_targetDrive.isScheduled() && !m_limeLight.hasTargetLock()) {
+        m_driverController.setRumble(RumbleType.kLeftRumble, .5);
+      } else {
+        m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
+      }
   }
 }

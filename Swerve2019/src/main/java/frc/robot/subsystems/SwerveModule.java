@@ -76,7 +76,7 @@ public class SwerveModule { // implements Loggable {
       String moduleName) {
     m_driveMotor = new CANSparkMax(driveMotorChannel, MotorType.kBrushless);
     m_driveMotor.restoreFactoryDefaults();
-    if (m_driveMotor.setIdleMode(IdleMode.kCoast) != REVLibError.kOk){
+    if (m_driveMotor.setIdleMode(IdleMode.kBrake) != REVLibError.kOk){
       SmartDashboard.putString("Idle Mode", "Error");
     }
 
@@ -94,7 +94,7 @@ public class SwerveModule { // implements Loggable {
     m_driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRotationsPerMeter);
 
     // Set whether drive encoder should be reversed or not
-    m_driveEncoder.setInverted(driveEncoderReversed);
+    //m_driveEncoder.setInverted(driveEncoderReversed);
 
     // Set the distance (in this case, angle) per pulse for the turning encoder.
     // This is the the angle through an entire rotation (2 * pi) divided by the

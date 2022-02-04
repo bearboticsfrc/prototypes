@@ -54,7 +54,7 @@ public class TargetDrive extends CommandBase {
 
     double degreesToTurn = m_limeLight.m_LimelightSteerCommand;
     
-    degreesToTurn = MathUtil.applyDeadband(degreesToTurn, .25);
+    degreesToTurn = (Math.abs(degreesToTurn) < 0.5) ? 0.0 : degreesToTurn; 
 
     double setPoint = m_driveSubsystem.getHeading() + degreesToTurn;
 

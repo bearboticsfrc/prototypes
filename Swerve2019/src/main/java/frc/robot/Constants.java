@@ -18,6 +18,11 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+
+  public static final double DT = 0.02; // 20ms framerate 50Hz
+  public static final double Tperiod = 0.02; // framerate period 20ms, 50Hz
+
+
   public static final class DriveConstants {
     public static final int kFrontLeftDriveMotorPort = 12;
     public static final int kBackLeftDriveMotorPort = 3;
