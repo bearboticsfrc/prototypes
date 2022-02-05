@@ -93,6 +93,7 @@ public class SwerveModule { // implements Loggable {
     m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec); // RPM to units per second
     m_driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRotationsPerMeter);
 
+    m_driveMotor.setInverted(true);
     // Set whether drive encoder should be reversed or not
     //m_driveEncoder.setInverted(driveEncoderReversed);
 

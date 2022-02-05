@@ -65,9 +65,9 @@ public class TargetDrive extends CommandBase {
     SmartDashboard.putNumber("setpoint", setPoint);
 
     m_driveSubsystem.drive(
-      -MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
-      -MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
-      -turnOutput,
+      MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
+      MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
+      turnOutput,
       -1,
       true);
   }
