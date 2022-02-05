@@ -74,14 +74,21 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
 
   private double kMaxSpeed = 5; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
+  private boolean m_turboMode = false;
 
   public void setTurboMode(boolean mode) {
     if(mode) {
+      m_turboMode = true;
       m_maxSpeed *= 2;
     } else {
+      m_turboMode = false;
       m_maxSpeed /= 2;
     }
     maxSpeedEntry.setDouble(m_maxSpeed);
+  }
+
+  public boolean getTurboMode() {
+    return m_turboMode;
   }
 
   private PivotPoint m_pivotPoint = PivotPoint.CENTER;

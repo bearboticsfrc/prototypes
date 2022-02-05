@@ -20,11 +20,13 @@ import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.AutoRotate;
 import frc.robot.commands.TargetDrive;
+import frc.robot.subsystems.BlinkinSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -43,6 +45,8 @@ public class RobotContainer {
 
   private final LimelightSubsystem m_limeLight = new LimelightSubsystem();
 
+  private BlinkinSubsystem m_blinkin = null; 
+
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
 
@@ -60,6 +64,7 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
+    m_blinkin = new BlinkinSubsystem(0);
     // Configure the button bindings
     configureButtonBindings();
     configureAutonomousChooser();
@@ -117,6 +122,11 @@ public class RobotContainer {
 
   }
 
+  private void configureTriggers() {
+    Trigger turboTrigger = new Trigger(m_robotDrive::getTurboMode);
+    turboTrigger.whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED.value));
+  }
+
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
    *
@@ -170,9 +180,19 @@ public class RobotContainer {
 
   public void periodic() {
       if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
-        m_driverController.setRumble(RumbleType.kLeftRumble, .5);
+        m_driverController.setRumble(RumbleType.kLeftRumble, 1.0);
       } else {
         m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
+      }
+      if (m_robotDrive.getTurboMode()) {
+        m_blinkin.set(BlinkinSubsystem.Color.RED.value);
+      } else {
+        if (m_targetDrive.isScheduled()) {
+          m_blinkin.set(BlinkinSubsystem.Color.YELLOW.value);
+         // m_blinkin.set(BlinkinSubsystem.Color.GOLD.value);
+        } else {
+          m_blinkin.set(BlinkinSubsystem.Color.BLUE.value);
+        }
       }
   }
 }
