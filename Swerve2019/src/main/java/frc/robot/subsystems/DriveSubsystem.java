@@ -198,6 +198,13 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
     m_backRight.setDesiredState(desiredStates[3]);
   }
 
+  public void stop() {
+    m_frontLeft.stop();
+    m_frontRight.stop();
+    m_backLeft.stop();
+    m_backRight.stop();
+  }
+  
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
     m_frontLeft.resetEncoders();

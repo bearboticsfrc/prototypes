@@ -7,7 +7,12 @@ package frc.robot;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -25,8 +30,11 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+
+import java.util.List;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
@@ -133,7 +141,8 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    return m_chooser.getSelected();
+    //return m_chooser.getSelected();
+    return AutonomousCommandHelper.getSimplAutonomousCommand(m_robotDrive);
   }
 
   public Command getPathPlannerCommand() {
@@ -178,6 +187,7 @@ public class RobotContainer {
 
   }
 
+
   public void periodic() {
       if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
         m_driverController.setRumble(RumbleType.kLeftRumble, 1.0);
@@ -189,7 +199,6 @@ public class RobotContainer {
       } else {
         if (m_targetDrive.isScheduled()) {
           m_blinkin.set(BlinkinSubsystem.Color.YELLOW.value);
-         // m_blinkin.set(BlinkinSubsystem.Color.GOLD.value);
         } else {
           m_blinkin.set(BlinkinSubsystem.Color.BLUE.value);
         }

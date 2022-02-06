@@ -93,7 +93,8 @@ public class SwerveModule { // implements Loggable {
     m_driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec); // RPM to units per second
     m_driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRotationsPerMeter);
 
-    m_driveMotor.setInverted(true);
+    m_driveMotor.setInverted(driveEncoderReversed);
+    m_driveEncoder.setInverted(driveEncoderReversed);
     // Set whether drive encoder should be reversed or not
     //m_driveEncoder.setInverted(driveEncoderReversed);
 
@@ -174,9 +175,9 @@ public class SwerveModule { // implements Loggable {
     final var turnOutput =
         m_turningPIDController.calculate(Math.toRadians(getAngle()), state.angle.getRadians());
     
-    double driveValue = MathUtil.clamp(driveOutput + state.speedMetersPerSecond, -0.2, 0.2);    
+    //double driveValue = MathUtil.clamp(driveOutput + state.speedMetersPerSecond, -0.2, 0.2);    
     
-    driveValue = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
+    double driveValue = state.speedMetersPerSecond / DriveConstants.kMaxSpeedMetersPerSecond;
    // SmartDashboard.putNumber(String.format("%s drive value", m_moduleName), driveValue);
     //SmartDashboard.putNumber(String.format("%s drive feed forward", m_moduleName), driveFeedforward);
    // SmartDashboard.putNumber(String.format("%s turn output", m_moduleName), turnOutput);

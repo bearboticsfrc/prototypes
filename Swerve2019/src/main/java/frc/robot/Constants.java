@@ -39,15 +39,15 @@ public final class Constants {
     public static final int kFrontRightTurningInputPort = 0;
     public static final int kBackRightTurningInputPort = 1;
 
-    public static final boolean kFrontLeftTurningEncoderReversed = false;
+    public static final boolean kFrontLeftTurningEncoderReversed = true;
     public static final boolean kBackLeftTurningEncoderReversed = true;
     public static final boolean kFrontRightTurningEncoderReversed = false;
-    public static final boolean kBackRightTurningEncoderReversed = true;
+    public static final boolean kBackRightTurningEncoderReversed = false;
 
-    public static final boolean kFrontLeftDriveEncoderReversed = false;
+    public static final boolean kFrontLeftDriveEncoderReversed = true;
     public static final boolean kBackLeftDriveEncoderReversed = true;
     public static final boolean kFrontRightDriveEncoderReversed = false;
-    public static final boolean kBackRightDriveEncoderReversed = true;
+    public static final boolean kBackRightDriveEncoderReversed = false;
 
     public static final double kFrontLeftZeroAngle = 48.0;
     public static final double kBackLeftZeroAngle = 272.0;
@@ -62,10 +62,10 @@ public final class Constants {
 
     public enum PivotPoint {
       CENTER      (new Translation2d( 0.0, 0.0)),
-      FRONT_LEFT  (new Translation2d(kTrackWidth / 2, kWheelBase / 2)),
-      FRONT_RIGHT (new Translation2d(-kTrackWidth / 2, kWheelBase / 2)),
-      BACK_RIGHT  (new Translation2d(kTrackWidth / 2, -kWheelBase / 2)),
-      BACK_LEFT   (new Translation2d(-kTrackWidth /2 , -kWheelBase / 2));
+      FRONT_LEFT  (new Translation2d(kWheelBase / 2, kTrackWidth / 2)),
+      FRONT_RIGHT (new Translation2d(-kWheelBase / 2, kTrackWidth / 2)),
+      BACK_RIGHT  (new Translation2d(kWheelBase / 2, -kTrackWidth / 2)),
+      BACK_LEFT   (new Translation2d(-kWheelBase /2 , -kTrackWidth / 2));
 
       private final Translation2d m_pivotPoint;
 
