@@ -14,13 +14,12 @@ import java.util.List;
 public class CharacterizeDrivetrainCommand extends CommandBase {
     private final DriveSubsystem drivetrain;
 
-    private final NetworkTableEntry autoSpeedEntry =
-            NetworkTableInstance.getDefault().getEntry("/SmartDashboard/SysIdAutoSpeed");
-    private final NetworkTableEntry telemetryEntry =
-            NetworkTableInstance.getDefault().getEntry("/SmartDashboard/SysIdTelemetry");
+    private final NetworkTableEntry autoSpeedEntry = NetworkTableInstance.getDefault()
+            .getEntry("/SmartDashboard/SysIdAutoSpeed");
+    private final NetworkTableEntry telemetryEntry = NetworkTableInstance.getDefault()
+            .getEntry("/SmartDashboard/SysIdTelemetry");
 
     private List<Double> telemetryData = new ArrayList<>();
-
 
     private double priorAutospeed = 0.0;
 
@@ -50,7 +49,7 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
         double autospeed = autoSpeedEntry.getDouble(0.0);
         priorAutospeed = autospeed;
 
-        drivetrain.drive(autospeed, 0.0, 0.0, -1, false);
+        drivetrain.drive(autospeed, 0.0, 0.0, false);
 
         telemetryData.add(now);
         telemetryData.add(autospeed * RobotController.getInputVoltage());
@@ -70,6 +69,6 @@ public class CharacterizeDrivetrainCommand extends CommandBase {
 
         telemetryEntry.setString(b.toString());
 
-        drivetrain.drive(0.0, 0.0, 0.0, -1, false);
+        drivetrain.stop();
     }
 }

@@ -5,12 +5,8 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.LinearFilter;
 import frc.robot.Constants;
-import frc.robot.subsystems.MeasuredSubsystem;
 
 public class LimelightSubsystem extends MeasuredSubsystem {
-    /**
-     * Creates a new Limelight_Subsystem.
-     */
 
     private NetworkTable table;
     private NetworkTableEntry tx;
@@ -33,6 +29,9 @@ public class LimelightSubsystem extends MeasuredSubsystem {
 
     private double filterTC = 0.8; // seconds, cutoff 1.25Hz
 
+    /**
+     * Creates a new Limelight_Subsystem.
+     */
     public LimelightSubsystem() {
 
         x_iir = LinearFilter.singlePoleIIR(filterTC, Constants.Tperiod);

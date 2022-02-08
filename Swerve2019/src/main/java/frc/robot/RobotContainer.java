@@ -5,14 +5,6 @@
 package frc.robot;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.XboxController.Button;
@@ -20,9 +12,9 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.LEDConstants;
 import frc.robot.Constants.OIConstants;
+import frc.robot.Constants.DriveConstants.PivotPoint;
 import frc.robot.commands.AutoRotate;
 import frc.robot.commands.TargetDrive;
 import frc.robot.subsystems.BlinkinSubsystem;
@@ -30,15 +22,8 @@ import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-
-import java.util.List;
-
-import com.pathplanner.lib.PathPlanner;
-import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -53,7 +38,7 @@ public class RobotContainer {
 
   private final LimelightSubsystem m_limeLight = new LimelightSubsystem();
 
-  private BlinkinSubsystem m_blinkin = null; 
+  private BlinkinSubsystem m_blinkin = null;
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -64,7 +49,7 @@ public class RobotContainer {
       m_driverController::getLeftX);
 
   private final AutoRotate m_autoRotate = new AutoRotate(m_robotDrive);
-  
+
   // A chooser for autonomous commands
   SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -72,9 +57,11 @@ public class RobotContainer {
    * The container for the robot. Contains subsystems, OI devices, and commands.
    */
   public RobotContainer() {
-    m_blinkin = new BlinkinSubsystem(0);
+    m_blinkin = new BlinkinSubsystem(LEDConstants.kBlinkinPWMPort);
+
     // Configure the button bindings
     configureButtonBindings();
+    configureTriggers();
     configureAutonomousChooser();
 
     // Configure default commands
@@ -86,7 +73,7 @@ public class RobotContainer {
                 MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
                 MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
                 MathUtil.applyDeadband(m_driverController.getRightX(), 0.1),
-                m_driverController.getPOV(),
+                PivotPoint.getByPOV(m_driverController.getPOV()),
                 true),
             m_robotDrive));
     ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
@@ -97,7 +84,8 @@ public class RobotContainer {
 
   private void configureAutonomousChooser() {
     // Add commands to the autonomous command chooser
-    m_chooser.setDefaultOption("Path Planner", getPathPlannerCommand());
+    m_chooser.setDefaultOption("Simple Path", AutonomousCommandHelper.getSimplAutonomousCommand(m_robotDrive));
+    m_chooser.addOption("Path Planner", AutonomousCommandHelper.getPathPlannerCommand(m_robotDrive));
     m_chooser.addOption("Auto Rotate", m_autoRotate);
 
     // Put the chooser on the dashboard
@@ -131,8 +119,13 @@ public class RobotContainer {
   }
 
   private void configureTriggers() {
-    Trigger turboTrigger = new Trigger(m_robotDrive::getTurboMode);
-    turboTrigger.whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED.value));
+
+    new Trigger(m_targetDrive::isScheduled)
+        .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.YELLOW))
+        .whenInactive(() -> m_blinkin.set(BlinkinSubsystem.Color.BLUE));
+    new Trigger(m_robotDrive::getTurboMode)
+        .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED));
+
   }
 
   /**
@@ -141,67 +134,25 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutonomousCommand() {
-    //return m_chooser.getSelected();
-    return AutonomousCommandHelper.getSimplAutonomousCommand(m_robotDrive);
+    return m_chooser.getSelected();
   }
-
-  public Command getPathPlannerCommand() {
-    // Create config for trajectory
-    TrajectoryConfig config = new TrajectoryConfig(
-        AutoConstants.kMaxSpeedMetersPerSecond,
-        AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-            // Add kinematics to ensure max speed is actually obeyed
-            .setKinematics(DriveConstants.kDriveKinematics);
-
-    // An example trajectory to follow. All units in meters.
-    PathPlannerTrajectory examplePath = PathPlanner.loadPath("testPath2", 1, 5);
-    /*
-     * TrajectoryGenerator.generateTrajectory(
-     * // Start at the origin facing the +X direction
-     * new Pose2d(0, 0, new Rotation2d(0)),
-     * // Pass through these two interior waypoints, making an 's' curve path
-     * List.of(new Translation2d(1, 1), new Translation2d(2, -1)),
-     * // End 3 meters straight ahead of where we started, facing forward
-     * new Pose2d(3, 0, new Rotation2d(0)),
-     * config);
-     */
-
-    var thetaController = new ProfiledPIDController(
-        AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
-    thetaController.enableContinuousInput(-Math.PI, Math.PI);
-
-    PPSwerveControllerCommand swerveControllerCommand = new PPSwerveControllerCommand(examplePath,
-        m_robotDrive::getPose,
-        DriveConstants.kDriveKinematics,
-        new PIDController(AutoConstants.kPXController, 0, 0),
-        new PIDController(AutoConstants.kPYController, 0, 0),
-        thetaController,
-        m_robotDrive::setModuleStates,
-        m_robotDrive);
-
-    // Reset odometry to the starting pose of the trajectory.
-   // m_robotDrive.resetOdometry(examplePath.getInitialPose());
-
-    // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, -1, false));
-
-  }
-
 
   public void periodic() {
-      if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
-        m_driverController.setRumble(RumbleType.kLeftRumble, 1.0);
-      } else {
-        m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
-      }
-      if (m_robotDrive.getTurboMode()) {
-        m_blinkin.set(BlinkinSubsystem.Color.RED.value);
-      } else {
-        if (m_targetDrive.isScheduled()) {
-          m_blinkin.set(BlinkinSubsystem.Color.YELLOW.value);
-        } else {
-          m_blinkin.set(BlinkinSubsystem.Color.BLUE.value);
-        }
-      }
+    if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
+      m_driverController.setRumble(RumbleType.kLeftRumble, 0.25);
+    } else {
+      m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
+    }
+
+    // if (m_robotDrive.getTurboMode()) {
+    // m_blinkin.set(BlinkinSubsystem.Color.RED);
+    // } else {
+    // if (m_targetDrive.isScheduled()) {
+    // m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
+    // } else {
+    // m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+    // }
+    // }
   }
+
 }

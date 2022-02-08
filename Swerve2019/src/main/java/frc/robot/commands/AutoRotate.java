@@ -11,14 +11,13 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.Constants.DriveConstants.PivotPoint;
 import frc.robot.subsystems.DriveSubsystem;
 
-
-public class AutoRotate extends CommandBase { 
+public class AutoRotate extends CommandBase {
   private DriveSubsystem m_driveSubsystem;
 
-  private final PIDController m_turnPIDController =
-    new PIDController(AutoConstants.kPAutoTurn, 0, 0);
+  private final PIDController m_turnPIDController = new PIDController(AutoConstants.kPAutoTurn, 0, 0);
 
   private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 360.0);
   private int m_step = 0;
@@ -40,21 +39,21 @@ public class AutoRotate extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double setPoint = m_degreeSetPoints.get(m_step) + m_offset;;
+    double setPoint = m_degreeSetPoints.get(m_step) + m_offset;
 
     double turnOutput = m_turnPIDController.calculate(m_driveSubsystem.getHeading(), setPoint);
 
-    SmartDashboard.putNumber("Turn Output", turnOutput);
-    SmartDashboard.putNumber("setpoint", setPoint);
+    //SmartDashboard.putNumber("Turn Output", turnOutput);
+    //SmartDashboard.putNumber("setpoint", setPoint);
 
     m_driveSubsystem.drive(
-      0.0,
-      0.0,
-      -turnOutput,
-      m_degreeSetPoints.get(m_step).intValue(),
-      true);
+        0.0,
+        0.0,
+        -turnOutput,
+        PivotPoint.getByPOV(m_degreeSetPoints.get(m_step).intValue()),
+        true);
 
-    if (Math.abs(m_driveSubsystem.getHeading() - setPoint) < 0.5 ) {
+    if (Math.abs(m_driveSubsystem.getHeading() - setPoint) < 0.5) {
       m_step++;
     }
   }
@@ -62,7 +61,7 @@ public class AutoRotate extends CommandBase {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_driveSubsystem.drive(0.0,0.0,0.0,-1,true);
+    m_driveSubsystem.stop();
   }
 
   // Returns true when the command should end.

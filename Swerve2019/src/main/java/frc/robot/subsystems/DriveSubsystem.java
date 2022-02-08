@@ -9,10 +9,10 @@ import java.util.Map;
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.drive.Vector2d;
@@ -23,51 +23,13 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.DriveConstants.PivotPoint;
-import io.github.oblarg.oblog.Loggable;
-import io.github.oblarg.oblog.annotations.Log;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
+public class DriveSubsystem extends MeasuredSubsystem {
   // Robot swerve modules
-  private final SwerveModule m_frontLeft =
-      new SwerveModule(
-          DriveConstants.kFrontLeftDriveMotorPort,
-          DriveConstants.kFrontLeftTurningMotorPort,
-          DriveConstants.kFrontLeftTurningInputPort,
-          DriveConstants.kFrontLeftDriveEncoderReversed,
-          DriveConstants.kFrontLeftTurningEncoderReversed,
-          DriveConstants.kFrontLeftZeroAngle,
-          "FL");
-
-  private final SwerveModule m_backLeft =
-      new SwerveModule(
-          DriveConstants.kBackLeftDriveMotorPort,
-          DriveConstants.kBackLeftTurningMotorPort,
-          DriveConstants.kBackLeftTurningInputPort,
-          DriveConstants.kBackLeftDriveEncoderReversed,
-          DriveConstants.kBackLeftTurningEncoderReversed,
-          DriveConstants.kBackLeftZeroAngle,
-          "BL");
-
-  private final SwerveModule m_frontRight =
-      new SwerveModule(
-          DriveConstants.kFrontRightDriveMotorPort,
-          DriveConstants.kFrontRightTurningMotorPort,
-          DriveConstants.kFrontRightTurningInputPort,
-          DriveConstants.kFrontRightDriveEncoderReversed,
-          DriveConstants.kFrontRightTurningEncoderReversed,
-          DriveConstants.kFrontRightZeroAngle,
-          "FR");
-
-  private final SwerveModule m_backRight =
-      new SwerveModule(
-          DriveConstants.kBackRightDriveMotorPort,
-          DriveConstants.kBackRightTurningMotorPort,
-          DriveConstants.kBackRightTurningInputPort,
-          DriveConstants.kBackRightDriveEncoderReversed,
-          DriveConstants.kBackRightTurningEncoderReversed,
-          DriveConstants.kBackRightZeroAngle,
-          "BR");
+  private final SwerveModule m_frontLeft;
+  private final SwerveModule m_backLeft;
+  private final SwerveModule m_frontRight;
+  private final SwerveModule m_backRight;
 
   // The gyro sensor
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
@@ -76,10 +38,87 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
   private double m_maxSpeed = kMaxSpeed;
   private boolean m_turboMode = false;
 
+  private PivotPoint m_pivotPoint = PivotPoint.CENTER;
+
+  // Odometry class for tracking robot pose
+  SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d());
+
+  ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+  ShuffleboardTab swerveModulesTab = Shuffleboard.getTab("Swerve Modules");
+
+  NetworkTableEntry maxSpeedEntry = tab.add("Drive Speed", kMaxSpeed)
+      .withWidget(BuiltInWidgets.kNumberSlider)
+      .withSize(2, 1)
+      .withProperties(Map.of("min", 0, "max", kMaxSpeed))
+      .getEntry();
+
+  private final SlewRateLimiter xLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+  private final SlewRateLimiter yLimiter = new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
+  private final SlewRateLimiter turningLimiter = new SlewRateLimiter(
+      DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
+
+  /** Creates a new DriveSubsystem. */
+  public DriveSubsystem() {
+
+    m_frontLeft = new SwerveModule(
+        DriveConstants.kFrontLeftDriveMotorPort,
+        DriveConstants.kFrontLeftTurningMotorPort,
+        DriveConstants.kFrontLeftTurningInputPort,
+        DriveConstants.kFrontLeftDriveEncoderReversed,
+        DriveConstants.kFrontLeftTurningEncoderReversed,
+        DriveConstants.kFrontLeftZeroAngle,
+        swerveModulesTab.getLayout("Front Left", BuiltInLayouts.kList)
+            .withSize(2, 4)
+            .withPosition(0, 0),
+        "FL");
+
+    m_backLeft = new SwerveModule(
+        DriveConstants.kBackLeftDriveMotorPort,
+        DriveConstants.kBackLeftTurningMotorPort,
+        DriveConstants.kBackLeftTurningInputPort,
+        DriveConstants.kBackLeftDriveEncoderReversed,
+        DriveConstants.kBackLeftTurningEncoderReversed,
+        DriveConstants.kBackLeftZeroAngle,
+        swerveModulesTab.getLayout("Back Left", BuiltInLayouts.kList)
+            .withSize(2, 4)
+            .withPosition(2, 0),
+        "BL");
+
+    m_frontRight = new SwerveModule(
+        DriveConstants.kFrontRightDriveMotorPort,
+        DriveConstants.kFrontRightTurningMotorPort,
+        DriveConstants.kFrontRightTurningInputPort,
+        DriveConstants.kFrontRightDriveEncoderReversed,
+        DriveConstants.kFrontRightTurningEncoderReversed,
+        DriveConstants.kFrontRightZeroAngle,
+        swerveModulesTab.getLayout("Front Right", BuiltInLayouts.kList)
+            .withSize(2, 4)
+            .withPosition(4, 0),
+        "FR");
+
+    m_backRight = new SwerveModule(
+        DriveConstants.kBackRightDriveMotorPort,
+        DriveConstants.kBackRightTurningMotorPort,
+        DriveConstants.kBackRightTurningInputPort,
+        DriveConstants.kBackRightDriveEncoderReversed,
+        DriveConstants.kBackRightTurningEncoderReversed,
+        DriveConstants.kBackRightZeroAngle,
+        swerveModulesTab.getLayout("Back Right", BuiltInLayouts.kList)
+            .withSize(2, 4)
+            .withPosition(6, 0),
+        "BR");
+
+    zeroHeading();
+    tab.addNumber("Gyro Angle", this::getHeading).withWidget(BuiltInWidgets.kGyro);
+    tab.addNumber("Pose X", () -> m_odometry.getPoseMeters().getX());
+    tab.addNumber("Pose Y", () -> m_odometry.getPoseMeters().getY());
+    tab.addNumber("Pose rot", () -> m_odometry.getPoseMeters().getRotation().getDegrees());
+  }
+  
   public void setTurboMode(boolean mode) {
-    if(mode) {
+    if (mode) {
       m_turboMode = true;
-      m_maxSpeed *= 2;
+      m_maxSpeed = Math.min(m_maxSpeed*2.0, kMaxSpeed);
     } else {
       m_turboMode = false;
       m_maxSpeed /= 2;
@@ -91,31 +130,6 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
     return m_turboMode;
   }
 
-  private PivotPoint m_pivotPoint = PivotPoint.CENTER;
-
-  // Odometry class for tracking robot pose
-  SwerveDriveOdometry m_odometry =
-      new SwerveDriveOdometry(DriveConstants.kDriveKinematics, m_gyro.getRotation2d());
-
-  ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
-
-  NetworkTableEntry maxSpeedEntry =  
-        tab.add("Drive Speed", kMaxSpeed)
-        .withWidget(BuiltInWidgets.kNumberSlider)
-        .withSize(2,1)
-        .withProperties(Map.of("min", 0, "max", kMaxSpeed))
-        .getEntry();
-        
-  private final SlewRateLimiter xLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
-  private final SlewRateLimiter yLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAccelerationUnitsPerSecond);
-  private final SlewRateLimiter turningLimiter =  new SlewRateLimiter(DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
-       
-  /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
-    zeroHeading();
-   // tab.add("Gyro", m_gyro).withWidget(BuiltInWidgets.kGyro);
-  }
-
   @Override
   public void monitored_periodic() {
     // Update the odometry in the periodic block
@@ -123,9 +137,9 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
         m_gyro.getRotation2d(),
         m_frontLeft.getState(),
         m_frontRight.getState(),
-        m_backRight.getState(),
-        m_backLeft.getState());
-    outputToSmartDashboard();    
+        m_backLeft.getState(),
+        m_backRight.getState());
+    outputToSmartDashboard();
     m_maxSpeed = maxSpeedEntry.getDouble(kMaxSpeed);
   }
 
@@ -141,6 +155,7 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
   public Vector2d getVelocity() {
     return new Vector2d(0.0, 0.0);
   }
+
   /**
    * Resets the odometry to the specified pose.
    *
@@ -150,34 +165,47 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
     m_odometry.resetPosition(pose, m_gyro.getRotation2d());
   }
 
-  
+  /**
+   * Drive robot using Joystick inputs, default to CENTER pivot.
+   * 
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the
+   *                      field.
+   */
+  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+    this.drive(xSpeed, ySpeed, rot, PivotPoint.CENTER, fieldRelative);
+  }
 
   /**
    * Method to drive the robot using joystick info.
    *
-   * @param xSpeed Speed of the robot in the x direction (forward).
-   * @param ySpeed Speed of the robot in the y direction (sideways).
-   * @param rot Angular rate of the robot.
-   * @param fieldRelative Whether the provided x and y speeds are relative to the field.
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   * @param PivotPoint    Where to pivot for turning.
+   * @param fieldRelative Whether the provided x and y speeds are relative to the
+   *                      field.
    */
   @SuppressWarnings("ParameterName")
-  public void drive(double xSpeed, double ySpeed, double rot, int pov, boolean fieldRelative) {
+  public void drive(double xSpeed, double ySpeed, double rot, PivotPoint pivotPoint, boolean fieldRelative) {
     xSpeed = xLimiter.calculate(xSpeed) * DriveConstants.kMaxSpeedMetersPerSecond;
     ySpeed = yLimiter.calculate(ySpeed) * DriveConstants.kMaxSpeedMetersPerSecond;
-    rot = turningLimiter.calculate(rot) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond * DriveConstants.kMaxSpeedMetersPerSecond;  
-    //rot = turningLimiter.calculate(rot) * DriveConstants.kMaxSpeedMetersPerSecond;  
-    setPivotPoint(getPivotPointByPOV(pov));
-    //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
-    //tab.add("controller x", xSpeed);
-    //tab.add("controller y", ySpeed);
-    //tab.add("controller rot", rot);
-    SmartDashboard.putNumber("rot", rot);
+    rot = turningLimiter.calculate(rot) * DriveConstants.kTeleDriveMaxAngularSpeedRadiansPerSecond
+        * DriveConstants.kMaxSpeedMetersPerSecond;
+    setPivotPoint(pivotPoint);
+    // ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
+    // tab.add("controller x", xSpeed);
+    // tab.add("controller y", ySpeed);
+    // tab.add("controller rot", rot);
+    // SmartDashboard.putNumber("rot", rot);
 
-    var swerveModuleStates =
-        DriveConstants.kDriveKinematics.toSwerveModuleStates(
-            fieldRelative
-                ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
-                : new ChassisSpeeds(xSpeed, ySpeed, rot), m_pivotPoint.get());
+    var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
+        fieldRelative
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
+            : new ChassisSpeeds(xSpeed, ySpeed, rot),
+        m_pivotPoint.get());
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, m_maxSpeed);
     m_frontLeft.setDesiredState(swerveModuleStates[0]);
     m_frontRight.setDesiredState(swerveModuleStates[1]);
@@ -204,7 +232,7 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
     m_backLeft.stop();
     m_backRight.stop();
   }
-  
+
   /** Resets the drive encoders to currently read a position of 0. */
   public void resetEncoders() {
     m_frontLeft.resetEncoders();
@@ -224,8 +252,8 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
    * @return the robot's heading in degrees, from -180 to 180
    */
   public double getHeading() {
-    double temp =  m_gyro.getRotation2d().getDegrees();
-    temp -= Math.floor(temp/360.0) * 360.0;
+    double temp = m_gyro.getRotation2d().getDegrees();
+    temp -= Math.floor(temp / 360.0) * 360.0;
     return temp;
   }
 
@@ -239,28 +267,12 @@ public class DriveSubsystem extends MeasuredSubsystem { // implements Loggable{
   }
 
   public void outputToSmartDashboard() {
-    SmartDashboard.putNumber("Gyro", getHeading());
     m_frontLeft.outputToSmartDashboard();
     m_frontRight.outputToSmartDashboard();
     m_backLeft.outputToSmartDashboard();
     m_backRight.outputToSmartDashboard();
   }
 
-  public PivotPoint getPivotPointByPOV( int pov ) {
-    switch (pov) {
-      case 0:
-        return PivotPoint.FRONT_LEFT;
-      case 90:
-        return PivotPoint.FRONT_RIGHT;
-      case 180:
-        return PivotPoint.BACK_RIGHT;
-      case 270:
-        return PivotPoint.BACK_LEFT;
-      default:
-        return PivotPoint.CENTER;
-    }
-  }
-  
   public void setPivotPoint(PivotPoint pivotPoint) {
     m_pivotPoint = pivotPoint;
   }

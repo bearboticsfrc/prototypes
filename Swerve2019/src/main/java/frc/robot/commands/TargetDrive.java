@@ -14,31 +14,28 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 
-
-public class TargetDrive extends CommandBase { 
+public class TargetDrive extends CommandBase {
   private DriveSubsystem m_driveSubsystem;
   private LimelightSubsystem m_limeLight;
 
   private DoubleSupplier m_xSupplier;
   private DoubleSupplier m_ySupplier;
 
-  private final PIDController m_turnPIDController =
-    new PIDController(AutoConstants.kPTargetTurn, AutoConstants.kITargetTurn, AutoConstants.kDTargetTurn);
-
+  private final PIDController m_turnPIDController = new PIDController(AutoConstants.kPTargetTurn,
+      AutoConstants.kITargetTurn, AutoConstants.kDTargetTurn);
 
   /** Creates a new TargetDrive. */
   public TargetDrive(DriveSubsystem driveSubsystem,
-                     LimelightSubsystem limeLight,
-                     DoubleSupplier ySupplier,
-                     DoubleSupplier xSupplier) {
+      LimelightSubsystem limeLight,
+      DoubleSupplier ySupplier,
+      DoubleSupplier xSupplier) {
 
     m_driveSubsystem = driveSubsystem;
     m_limeLight = limeLight;
     m_xSupplier = xSupplier;
     m_ySupplier = ySupplier;
 
-    addRequirements(m_driveSubsystem);
-
+    addRequirements(m_driveSubsystem, m_limeLight);
   }
 
   // Called when the command is initially scheduled.
@@ -50,11 +47,9 @@ public class TargetDrive extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    //m_limeLight.Update_Limelight_Tracking();
-
     double degreesToTurn = m_limeLight.getX();
-    
-    degreesToTurn = (Math.abs(degreesToTurn) < 0.5) ? 0.0 : degreesToTurn; 
+
+    degreesToTurn = (Math.abs(degreesToTurn) < 0.5) ? 0.0 : degreesToTurn;
 
     double setPoint = m_driveSubsystem.getHeading() + degreesToTurn;
 
@@ -65,11 +60,10 @@ public class TargetDrive extends CommandBase {
     SmartDashboard.putNumber("setpoint", setPoint);
 
     m_driveSubsystem.drive(
-      MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
-      MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
-      turnOutput,
-      -1,
-      true);
+        MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
+        MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
+        turnOutput,
+        true);
   }
 
   // Called once the command ends or is interrupted.
