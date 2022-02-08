@@ -46,13 +46,13 @@ public final class Constants {
     public static final int kFrontRightTurningInputPort = 0;
     public static final int kBackRightTurningInputPort = 1;
 
-    public static final boolean kFrontLeftTurningEncoderReversed = true;
-    public static final boolean kBackLeftTurningEncoderReversed = true;
+    public static final boolean kFrontLeftTurningEncoderReversed = false;
+    public static final boolean kBackLeftTurningEncoderReversed = false;
     public static final boolean kFrontRightTurningEncoderReversed = false;
     public static final boolean kBackRightTurningEncoderReversed = false;
 
-    public static final boolean kFrontLeftDriveEncoderReversed = true;
-    public static final boolean kBackLeftDriveEncoderReversed = true;
+    public static final boolean kFrontLeftDriveEncoderReversed = false;
+    public static final boolean kBackLeftDriveEncoderReversed = false;
     public static final boolean kFrontRightDriveEncoderReversed = false;
     public static final boolean kBackRightDriveEncoderReversed = false;
 
@@ -125,14 +125,14 @@ public final class Constants {
   }
 
   public static final class SwerveModuleConstants {
-    public static final boolean kSwerveModuleDebugMode = false;
+    public static final boolean kSwerveModuleDebugMode = true;
     
     public static final double kMaxModuleAngularSpeedRadiansPerSecond = 2 * Math.PI * 4;
     public static final double kMaxModuleAngularAccelerationRadiansPerSecondSquared = 2 * Math.PI * 16;
 
     // public static final int kEncoderCPR = 1024;
     public static final int kEncoderCPR = 42;
-    public static final double kWheelDiameterMeters = Units.feetToMeters(4);// 0.1016;
+    public static final double kWheelDiameterMeters = 0.100; // Units.inchesToMeters(4);// 0.1016;
     public static final double kDriveGearReduction = 6.67 / 1.0;
     public static final double kDriveEncoderRotationsPerMeter = kWheelDiameterMeters * Math.PI / kDriveGearReduction;
     public static final double kDriveEncoderDistancePerPulse =
@@ -154,13 +154,13 @@ public final class Constants {
   }
 
   public static final class AutoConstants {
-    public static final double kMaxSpeedMetersPerSecond = 5;
-    public static final double kMaxAccelerationMetersPerSecondSquared = 3;
+    public static final double kMaxSpeedMetersPerSecond = 1;
+    public static final double kMaxAccelerationMetersPerSecondSquared = 1;
     public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
     public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
 
-    public static final double kPXController = .01;
-    public static final double kPYController = .01;
+    public static final double kPXController = 4;
+    public static final double kPYController = 4;
     public static final double kPThetaController = 1;
 
     // Constraint for the motion profilied robot angle controller

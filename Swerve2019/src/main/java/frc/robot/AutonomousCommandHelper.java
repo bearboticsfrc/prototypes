@@ -105,6 +105,9 @@ public class AutonomousCommandHelper {
             thetaController,
             driveSubsystem::setModuleStates,
             driveSubsystem);
+
+        PathDebugCommand pathDebugCommand = new PathDebugCommand(examplePath, driveSubsystem::getPose);        
+        ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand, pathDebugCommand);
     
         // Reset odometry to the starting pose of the trajectory.
         // m_robotDrive.resetOdometry(examplePath.getInitialPose());
@@ -112,7 +115,7 @@ public class AutonomousCommandHelper {
         // Run path following command, then stop at the end.
         return new SequentialCommandGroup(
             new InstantCommand(() -> driveSubsystem.resetOdometry(examplePath.getInitialPose())),
-            swerveControllerCommand,
+            parallelCommandGroup,
             new InstantCommand(() -> driveSubsystem.stop()));    
       }
 }

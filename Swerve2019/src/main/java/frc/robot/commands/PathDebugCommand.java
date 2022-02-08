@@ -36,8 +36,8 @@ public class PathDebugCommand extends CommandBase {
         var desiredState = m_trajectory.sample(curTime);
         Pose2d pose = m_poseSupplier.get();
 
-        System.out.println("trajectory[" + desiredState.poseMeters.getX() + "," + desiredState.poseMeters.getY() + " ]"
-                + " actual[" + pose.getX() + "," + pose.getY() + "]");
+        System.out.println("trajectory[" + desiredState.poseMeters.getX() + "," + desiredState.poseMeters.getY() + "," + desiredState.poseMeters.getRotation().getDegrees() + "]"
+                + " actual[" + pose.getX() + "," + pose.getY() + "," + pose.getRotation().getDegrees() + "]");
     }
 
     @Override

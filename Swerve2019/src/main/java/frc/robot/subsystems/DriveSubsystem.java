@@ -109,7 +109,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
         "BR");
 
     zeroHeading();
-    tab.addNumber("Gyro Angle", this::getHeading).withWidget(BuiltInWidgets.kGyro);
+    //tab.addNumber("Gyro Angle", this::getHeading).withWidget(BuiltInWidgets.kGyro);
     tab.addNumber("Pose X", () -> m_odometry.getPoseMeters().getX());
     tab.addNumber("Pose Y", () -> m_odometry.getPoseMeters().getY());
     tab.addNumber("Pose rot", () -> m_odometry.getPoseMeters().getRotation().getDegrees());
