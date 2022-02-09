@@ -37,6 +37,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
   private double kMaxSpeed = 3; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
   private boolean m_turboMode = false;
+  private boolean m_fieldRelativeMode = true;
 
   private PivotPoint m_pivotPoint = PivotPoint.CENTER;
 
@@ -130,6 +131,15 @@ public class DriveSubsystem extends MeasuredSubsystem {
     return m_turboMode;
   }
 
+  public void setFieldRelative(boolean mode) {
+    m_fieldRelativeMode = mode;
+  }
+
+  public boolean getFieldRelative() {
+    return m_fieldRelativeMode;
+  }
+
+
   @Override
   public void monitored_periodic() {
     // Update the odometry in the periodic block
@@ -175,6 +185,29 @@ public class DriveSubsystem extends MeasuredSubsystem {
   }
 
   /**
+   * Drive robot using Joystick inputs, default to CENTER pivot, and sets
+   * field relative to the current fieldRelativeMode setting.
+   * 
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   */
+  public void drive(double xSpeed, double ySpeed, double rot) {
+    this.drive(xSpeed, ySpeed, rot, PivotPoint.CENTER, m_fieldRelativeMode);
+  }
+
+  /**
+   * Drive robot using Joystick inputs, sets field relative to the current fieldRelativeMode setting.
+   * 
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   */
+  public void drive(double xSpeed, double ySpeed, double rot, PivotPoint pivotPoint) {
+    this.drive(xSpeed, ySpeed, rot, pivotPoint, m_fieldRelativeMode);
+  }
+
+  /**
    * Drive robot using Joystick inputs, default to CENTER pivot.
    * 
    * @param xSpeed        Speed of the robot in the x direction (forward).
@@ -183,7 +216,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
    * @param fieldRelative Whether the provided x and y speeds are relative to the
    *                      field.
    */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative) {
+  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative )  {
     this.drive(xSpeed, ySpeed, rot, PivotPoint.CENTER, fieldRelative);
   }
 

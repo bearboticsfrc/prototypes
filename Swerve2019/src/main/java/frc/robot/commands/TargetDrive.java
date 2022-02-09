@@ -62,8 +62,7 @@ public class TargetDrive extends CommandBase {
     m_driveSubsystem.drive(
         -MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
         -MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
-        -turnOutput,
-        true);
+        -turnOutput);
   }
 
   // Called once the command ends or is interrupted.

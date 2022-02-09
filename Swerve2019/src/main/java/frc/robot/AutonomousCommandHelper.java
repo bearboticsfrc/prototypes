@@ -30,6 +30,8 @@ import frc.robot.subsystems.DriveSubsystem;
 
 public class AutonomousCommandHelper {
 
+    public static final boolean kDebugMode = false;
+
     public static Command getSimplAutonomousCommand(DriveSubsystem driveSubsystem) {
         // 1. Create trajectory settings
         TrajectoryConfig trajectoryConfig = new TrajectoryConfig(
@@ -46,13 +48,16 @@ public class AutonomousCommandHelper {
                 new Pose2d(3, 0, Rotation2d.fromDegrees(0)),
                 trajectoryConfig);
 
-        double trajectoryLength = trajectory.getTotalTimeSeconds();
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory total time = " + trajectoryLength);
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory states size = " + trajectory.getStates().size());
-        List<State> states = trajectory.getStates();
+        if (kDebugMode) {
+            double trajectoryLength = trajectory.getTotalTimeSeconds();
+            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory total time = " + trajectoryLength);
+            System.out.println(
+                    "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory states size = " + trajectory.getStates().size());
+            List<State> states = trajectory.getStates();
 
-        for (State state : states ) {
-            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%% state: " + state.toString());
+            for (State state : states) {
+                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%% state: " + state.toString());
+            }
         }
     
         // 3. Define PID controllers for tracking trajectory
@@ -74,42 +79,43 @@ public class AutonomousCommandHelper {
                 driveSubsystem::setModuleStates,
                 driveSubsystem);
 
-        PathDebugCommand pathDebugCommand = new PathDebugCommand(trajectory, driveSubsystem::getPose);        
-        ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand, pathDebugCommand);
-    
+        Command autoCommand = swerveControllerCommand;
+        if (kDebugMode) {
+            PathDebugCommand pathDebugCommand = new PathDebugCommand(trajectory, driveSubsystem::getPose);
+            ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand,
+                                                                                 pathDebugCommand);
+            autoCommand = parallelCommandGroup;
+        }
         // 5. Add some init and wrap-up, and return everything
         return new SequentialCommandGroup(
                 new InstantCommand(() -> driveSubsystem.resetOdometry(trajectory.getInitialPose())),
-                parallelCommandGroup,
+                autoCommand,
                 new InstantCommand(() -> driveSubsystem.stop()));
     }
     
     public static Command getPathPlannerCommand(DriveSubsystem driveSubsystem) {
-        // Create config for trajectory
-        TrajectoryConfig config = new TrajectoryConfig(
-            AutoConstants.kMaxSpeedMetersPerSecond,
-            AutoConstants.kMaxAccelerationMetersPerSecondSquared)
-                // Add kinematics to ensure max speed is actually obeyed
-                .setKinematics(DriveConstants.kDriveKinematics);
-    
         // An example trajectory to follow. All units in meters.
-        PathPlannerTrajectory examplePath = PathPlanner.loadPath("simple1", .5, .5);
+        PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.loadPath("simple1", .5, .5);
 
-        double trajectoryLength = examplePath.getTotalTimeSeconds();
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory total time = " + trajectoryLength);
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory states size = " + examplePath.getStates().size());
-        List<State> states = examplePath.getStates();
+        if (kDebugMode) {
+            double trajectoryLength = pathPlannerTrajectory.getTotalTimeSeconds();
+            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory total time = " + trajectoryLength);
+            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory states size = "
+                    + pathPlannerTrajectory.getStates().size());
+            List<State> states = pathPlannerTrajectory.getStates();
 
-        for (State state : states ) {
-            PathPlannerState pState = (PathPlannerState)state;
-            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%% holonomicRotation: "+ pState.holonomicRotation+" state: " + pState.toString());
+            for (State state : states) {
+                PathPlannerState pState = (PathPlannerState) state;
+                System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%% holonomicRotation: " + pState.holonomicRotation
+                        + " state: " + pState.toString());
+            }
         }
     
         var thetaController = new ProfiledPIDController(
             AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
     
-        PPSwerveControllerCommand swerveControllerCommand = new PPSwerveControllerCommand(examplePath,
+        PPSwerveControllerCommand swerveControllerCommand = new PPSwerveControllerCommand(pathPlannerTrajectory,
                 driveSubsystem::getPose,
                 DriveConstants.kDriveKinematics,
                 new PIDController(AutoConstants.kPXController, 0, 0),
@@ -118,17 +124,21 @@ public class AutonomousCommandHelper {
                 driveSubsystem::setModuleStates,
                 driveSubsystem);
 
-        PathPlannerDebugCommand pathDebugCommand = new PathPlannerDebugCommand(examplePath, driveSubsystem::getPose);        
-        ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand, pathDebugCommand);
-    
-        // Reset odometry to the starting pose of the trajectory.
-        // m_robotDrive.resetOdometry(examplePath.getInitialPose());
-    
+        Command autoCommand = swerveControllerCommand;
+
+        if (kDebugMode) {
+            PathPlannerDebugCommand pathDebugCommand = new PathPlannerDebugCommand(pathPlannerTrajectory,
+                                                                                   driveSubsystem::getPose);
+            ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand,
+                                                                                 pathDebugCommand);
+            autoCommand = parallelCommandGroup;
+        }
+
         // Run path following command, then stop at the end.
         return new SequentialCommandGroup(
-            new InstantCommand(() -> driveSubsystem.resetOdometry(new Pose2d(examplePath.getInitialState().poseMeters.getTranslation(),
-                                                                             examplePath.getInitialState().holonomicRotation))),
-            parallelCommandGroup,
+            new InstantCommand(() -> driveSubsystem.resetOdometry(new Pose2d(pathPlannerTrajectory.getInitialState().poseMeters.getTranslation(),
+                                                                             pathPlannerTrajectory.getInitialState().holonomicRotation))),
+            autoCommand,
             new InstantCommand(() -> driveSubsystem.stop()));    
       }
 }

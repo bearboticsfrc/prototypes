@@ -75,8 +75,7 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
                 -MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
                 -MathUtil.applyDeadband(m_driverController.getRightX(), 0.1),
-                PivotPoint.getByPOV(m_driverController.getPOV()),
-                true),
+                PivotPoint.getByPOV(m_driverController.getPOV())),
             m_robotDrive));
     ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
     tab.addBoolean("Target Mode", m_targetDrive::isScheduled);
@@ -118,6 +117,10 @@ public class RobotContainer {
         .whenPressed(() -> m_robotDrive.setTurboMode(true))
         .whenReleased(() -> m_robotDrive.setTurboMode(false));
 
+    new JoystickButton(m_driverController, Button.kLeftBumper.value)
+        .whenPressed(() -> m_robotDrive.setFieldRelative(false))
+        .whenReleased(() -> m_robotDrive.setFieldRelative(true));
+
   }
 
   private void configureTriggers() {
@@ -151,17 +154,21 @@ public class RobotContainer {
       m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
     }
 
-    if (m_robotDrive.getTurboMode()) {
-      m_blinkin.set(BlinkinSubsystem.Color.RED);
+    if (!m_robotDrive.getFieldRelative()) {
+      m_blinkin.set(BlinkinSubsystem.Color.HOT_PINK);
     } else {
-      if (m_autoModeSupplier.getAsBoolean()) {
-        // Autonomous Mode
-        m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
+      if (m_robotDrive.getTurboMode()) {
+        m_blinkin.set(BlinkinSubsystem.Color.RED);
       } else {
-        if (m_targetDrive.isScheduled()) {
-          m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
+        if (m_autoModeSupplier.getAsBoolean()) {
+          // Autonomous Mode
+          m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
         } else {
-          m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+          if (m_targetDrive.isScheduled()) {
+            m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
+          } else {
+            m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+          }
         }
       }
     }
