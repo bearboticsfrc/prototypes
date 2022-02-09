@@ -8,13 +8,13 @@ import java.util.Map;
 
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.drive.Vector2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -34,7 +34,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
   // The gyro sensor
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
 
-  private double kMaxSpeed = 5; // 3 meters per second
+  private double kMaxSpeed = 3; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
   private boolean m_turboMode = false;
 
@@ -163,6 +163,15 @@ public class DriveSubsystem extends MeasuredSubsystem {
    */
   public void resetOdometry(Pose2d pose) {
     m_odometry.resetPosition(pose, m_gyro.getRotation2d());
+  }
+
+ /**
+   * Resets the odometry to the specified pose.
+   *
+   * @param pose The pose to which to set the odometry.
+   */
+  public void resetOdometry(Pose2d pose, Rotation2d angle) {
+    m_odometry.resetPosition(pose, angle);
   }
 
   /**

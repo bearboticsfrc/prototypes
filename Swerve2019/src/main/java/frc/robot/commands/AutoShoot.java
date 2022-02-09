@@ -4,44 +4,38 @@
 
 package frc.robot.commands;
 
-import java.util.function.DoubleSupplier;
-
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
 
-public class TargetDrive extends CommandBase {
-  private DriveSubsystem m_driveSubsystem;
-  private LimelightSubsystem m_limeLight;
-
-  private DoubleSupplier m_xSupplier;
-  private DoubleSupplier m_ySupplier;
+public class AutoShoot extends CommandBase {
+  private final DriveSubsystem m_driveSubsystem;
+  private final LimelightSubsystem m_limeLight;
+  private final ShooterSubsystem m_shooter;
 
   private final PIDController m_turnPIDController = new PIDController(AutoConstants.kPTargetTurn,
       AutoConstants.kITargetTurn, AutoConstants.kDTargetTurn);
 
   /** Creates a new TargetDrive. */
-  public TargetDrive(DriveSubsystem driveSubsystem,
+  public AutoShoot(DriveSubsystem driveSubsystem,
       LimelightSubsystem limeLight,
-      DoubleSupplier ySupplier,
-      DoubleSupplier xSupplier) {
+      ShooterSubsystem shooter) {
 
     m_driveSubsystem = driveSubsystem;
     m_limeLight = limeLight;
-    m_xSupplier = xSupplier;
-    m_ySupplier = ySupplier;
+    m_shooter = shooter;
 
-    addRequirements(m_driveSubsystem, m_limeLight);
+    addRequirements(m_driveSubsystem, m_limeLight, m_shooter);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
     m_limeLight.enableLED();
+    m_shooter.prepare();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -51,30 +45,28 @@ public class TargetDrive extends CommandBase {
 
     degreesToTurn = (Math.abs(degreesToTurn) < 0.5) ? 0.0 : degreesToTurn;
 
-    double setPoint = m_driveSubsystem.getHeading() + degreesToTurn;
+    if (degreesToTurn == 0.0) {
+      // take the shot
+      m_shooter.shoot();
+    } else {
+      double setPoint = m_driveSubsystem.getHeading() + degreesToTurn;
 
-    double turnOutput = m_turnPIDController.calculate(m_driveSubsystem.getHeading(), setPoint);
+      double turnOutput = m_turnPIDController.calculate(m_driveSubsystem.getHeading(), setPoint);
 
-    SmartDashboard.putNumber("Turn Output", turnOutput);
-    SmartDashboard.putNumber("degrees to turn", degreesToTurn);
-    SmartDashboard.putNumber("setpoint", setPoint);
-
-    m_driveSubsystem.drive(
-        -MathUtil.applyDeadband(m_ySupplier.getAsDouble(), 0.1),
-        -MathUtil.applyDeadband(m_xSupplier.getAsDouble(), 0.1),
-        -turnOutput,
-        true);
+      m_driveSubsystem.drive(0.0, 0.0, turnOutput, true);
+    }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     m_limeLight.disableLED();
+    m_shooter.stop();
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    return m_shooter.finishedShooting();
   }
 }

@@ -7,7 +7,6 @@ package frc.robot;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
@@ -156,12 +155,12 @@ public final class Constants {
   public static final class AutoConstants {
     public static final double kMaxSpeedMetersPerSecond = 1;
     public static final double kMaxAccelerationMetersPerSecondSquared = 1;
-    public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI;
-    public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI;
+    public static final double kMaxAngularSpeedRadiansPerSecond = Math.PI * 4;
+    public static final double kMaxAngularSpeedRadiansPerSecondSquared = Math.PI * 16;
 
     public static final double kPXController = 4;
     public static final double kPYController = 4;
-    public static final double kPThetaController = 1;
+    public static final double kPThetaController = 8; // 32; // 32 worked at low speed
 
     // Constraint for the motion profilied robot angle controller
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(

@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -23,7 +25,6 @@ import frc.robot.subsystems.LimelightSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -33,9 +34,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems
-  // private final nosubsystem m_robotDrive = new nosubsystem();
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-
   private final LimelightSubsystem m_limeLight = new LimelightSubsystem();
 
   private BlinkinSubsystem m_blinkin = null;
@@ -52,6 +51,9 @@ public class RobotContainer {
 
   // A chooser for autonomous commands
   SendableChooser<Command> m_chooser = new SendableChooser<>();
+
+  // a hook to call aback to Robot to see if we are in Autonomous mode (for setting LEDs)
+  private BooleanSupplier m_autoModeSupplier = (() -> { return false; });
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -72,7 +74,7 @@ public class RobotContainer {
             () -> m_robotDrive.drive(
                 -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
                 -MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
-                MathUtil.applyDeadband(m_driverController.getRightX(), 0.1),
+                -MathUtil.applyDeadband(m_driverController.getRightX(), 0.1),
                 PivotPoint.getByPOV(m_driverController.getPOV()),
                 true),
             m_robotDrive));
@@ -84,8 +86,8 @@ public class RobotContainer {
 
   private void configureAutonomousChooser() {
     // Add commands to the autonomous command chooser
-    m_chooser.setDefaultOption("Simple Path", AutonomousCommandHelper.getSimplAutonomousCommand(m_robotDrive));
-    m_chooser.addOption("Path Planner", AutonomousCommandHelper.getPathPlannerCommand(m_robotDrive));
+   // m_chooser.addOption("Simple Path", AutonomousCommandHelper.getSimplAutonomousCommand(m_robotDrive));
+    m_chooser.setDefaultOption("Path Planner", AutonomousCommandHelper.getPathPlannerCommand(m_robotDrive));
     m_chooser.addOption("Auto Rotate", m_autoRotate);
 
     // Put the chooser on the dashboard
@@ -120,11 +122,11 @@ public class RobotContainer {
 
   private void configureTriggers() {
 
-    new Trigger(m_targetDrive::isScheduled)
-        .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.YELLOW))
-        .whenInactive(() -> m_blinkin.set(BlinkinSubsystem.Color.BLUE));
-    new Trigger(m_robotDrive::getTurboMode)
-        .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED));
+    // new Trigger(m_targetDrive::isScheduled)
+    //     .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.YELLOW))
+    //     .whenInactive(() -> m_blinkin.set(BlinkinSubsystem.Color.BLUE));
+    // new Trigger(m_robotDrive::getTurboMode)
+    //     .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED));
 
   }
 
@@ -137,6 +139,11 @@ public class RobotContainer {
     return m_chooser.getSelected();
   }
 
+
+  public void setAutoModeSupplier(BooleanSupplier autoModeSupplier) {
+    m_autoModeSupplier = autoModeSupplier;
+  }
+
   public void periodic() {
     if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
       m_driverController.setRumble(RumbleType.kLeftRumble, 0.25);
@@ -144,15 +151,20 @@ public class RobotContainer {
       m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
     }
 
-    // if (m_robotDrive.getTurboMode()) {
-    // m_blinkin.set(BlinkinSubsystem.Color.RED);
-    // } else {
-    // if (m_targetDrive.isScheduled()) {
-    // m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
-    // } else {
-    // m_blinkin.set(BlinkinSubsystem.Color.BLUE);
-    // }
-    // }
+    if (m_robotDrive.getTurboMode()) {
+      m_blinkin.set(BlinkinSubsystem.Color.RED);
+    } else {
+      if (m_autoModeSupplier.getAsBoolean()) {
+        // Autonomous Mode
+        m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
+      } else {
+        if (m_targetDrive.isScheduled()) {
+          m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
+        } else {
+          m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+        }
+      }
+    }
   }
 
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.commands.PPSwerveControllerCommand;
 
 import edu.wpi.first.math.controller.PIDController;
@@ -24,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.commands.PathDebugCommand;
+import frc.robot.commands.PathPlannerDebugCommand;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class AutonomousCommandHelper {
@@ -91,22 +93,32 @@ public class AutonomousCommandHelper {
                 .setKinematics(DriveConstants.kDriveKinematics);
     
         // An example trajectory to follow. All units in meters.
-        PathPlannerTrajectory examplePath = PathPlanner.loadPath("testPath2", 1, 5);
+        PathPlannerTrajectory examplePath = PathPlanner.loadPath("simple1", .5, .5);
+
+        double trajectoryLength = examplePath.getTotalTimeSeconds();
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory total time = " + trajectoryLength);
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Trajectory states size = " + examplePath.getStates().size());
+        List<State> states = examplePath.getStates();
+
+        for (State state : states ) {
+            PathPlannerState pState = (PathPlannerState)state;
+            System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%% holonomicRotation: "+ pState.holonomicRotation+" state: " + pState.toString());
+        }
     
         var thetaController = new ProfiledPIDController(
             AutoConstants.kPThetaController, 0, 0, AutoConstants.kThetaControllerConstraints);
         thetaController.enableContinuousInput(-Math.PI, Math.PI);
     
         PPSwerveControllerCommand swerveControllerCommand = new PPSwerveControllerCommand(examplePath,
-            driveSubsystem::getPose,
-            DriveConstants.kDriveKinematics,
-            new PIDController(AutoConstants.kPXController, 0, 0),
-            new PIDController(AutoConstants.kPYController, 0, 0),
-            thetaController,
-            driveSubsystem::setModuleStates,
-            driveSubsystem);
+                driveSubsystem::getPose,
+                DriveConstants.kDriveKinematics,
+                new PIDController(AutoConstants.kPXController, 0, 0),
+                new PIDController(AutoConstants.kPYController, 0, 0),
+                thetaController,
+                driveSubsystem::setModuleStates,
+                driveSubsystem);
 
-        PathDebugCommand pathDebugCommand = new PathDebugCommand(examplePath, driveSubsystem::getPose);        
+        PathPlannerDebugCommand pathDebugCommand = new PathPlannerDebugCommand(examplePath, driveSubsystem::getPose);        
         ParallelCommandGroup parallelCommandGroup = new ParallelCommandGroup(swerveControllerCommand, pathDebugCommand);
     
         // Reset odometry to the starting pose of the trajectory.
@@ -114,7 +126,8 @@ public class AutonomousCommandHelper {
     
         // Run path following command, then stop at the end.
         return new SequentialCommandGroup(
-            new InstantCommand(() -> driveSubsystem.resetOdometry(examplePath.getInitialPose())),
+            new InstantCommand(() -> driveSubsystem.resetOdometry(new Pose2d(examplePath.getInitialState().poseMeters.getTranslation(),
+                                                                             examplePath.getInitialState().holonomicRotation))),
             parallelCommandGroup,
             new InstantCommand(() -> driveSubsystem.stop()));    
       }
