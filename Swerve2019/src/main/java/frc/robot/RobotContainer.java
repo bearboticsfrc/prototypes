@@ -149,9 +149,9 @@ public class RobotContainer {
 
   public void periodic() {
     if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
-      m_driverController.setRumble(RumbleType.kLeftRumble, 0.25);
+      //m_driverController.setRumble(RumbleType.kLeftRumble, 0.25);
     } else {
-      m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
+      //m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
     }
 
     if (!m_robotDrive.getFieldRelative()) {
@@ -167,7 +167,7 @@ public class RobotContainer {
           if (m_targetDrive.isScheduled()) {
             m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
           } else {
-            m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+            m_blinkin.set((BlinkinSubsystem.Color.BLUE));
           }
         }
       }

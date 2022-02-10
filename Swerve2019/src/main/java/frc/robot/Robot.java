@@ -33,7 +33,7 @@ public class Robot extends TimedRobot {
     m_robotContainer = new RobotContainer();
     m_robotContainer.setAutoModeSupplier(this::isAutonomousEnabled);
     MeasuredSubsystem.resetAllStats();
-    CameraServer.startAutomaticCapture();
+    //CameraServer.startAutomaticCapture();
 
     // The first argument is the root container
     // The second argument is whether logging and config should be given separate tabs

@@ -19,6 +19,7 @@ import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.LayoutType;
@@ -98,7 +99,6 @@ public class SwerveModule {
     m_turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
     if (SwerveModuleConstants.kSwerveModuleDebugMode) {
-      //ShuffleboardTab tab = Shuffleboard.getTab("Drive System");
       container.addNumber(String.format("%s angle", m_moduleName), this::getAngle);
       container.addNumber(String.format("%s velocity", m_moduleName), m_driveEncoder::getVelocity);
       container.addNumber(String.format("%s drive current", m_moduleName), m_driveMotor::getOutputCurrent);

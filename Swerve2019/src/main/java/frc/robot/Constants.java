@@ -124,7 +124,7 @@ public final class Constants {
   }
 
   public static final class SwerveModuleConstants {
-    public static final boolean kSwerveModuleDebugMode = true;
+    public static final boolean kSwerveModuleDebugMode = false;
     
     public static final double kMaxModuleAngularSpeedRadiansPerSecond = 2 * Math.PI * 4;
     public static final double kMaxModuleAngularAccelerationRadiansPerSecondSquared = 2 * Math.PI * 16;
