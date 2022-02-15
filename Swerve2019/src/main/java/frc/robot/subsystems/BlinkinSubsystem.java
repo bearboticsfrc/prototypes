@@ -1,6 +1,8 @@
 
 package frc.robot.subsystems;
 
+import java.util.Stack;
+
 import edu.wpi.first.wpilibj.motorcontrol.Spark;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -13,7 +15,9 @@ public class BlinkinSubsystem extends SubsystemBase {
    * 0 corresponds to 1500us
    * +1 corresponds to 2000us
    */
-  private static Spark m_blinkin = null;
+  private final Spark m_blinkin;
+
+  private Stack<Color> colorStack = new Stack<Color>();
 
   /**
    * Creates a new Blinkin LED controller.
@@ -42,6 +46,12 @@ public class BlinkinSubsystem extends SubsystemBase {
 
   public void set(Color color) {
     m_blinkin.set(color.value);
+    colorStack.add(color);
+  }
+
+  public Color getPreviousColor() {
+    colorStack.pop();
+    return colorStack.pop();
   }
 
   public enum Color {

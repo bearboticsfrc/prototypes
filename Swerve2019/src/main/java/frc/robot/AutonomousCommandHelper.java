@@ -95,7 +95,7 @@ public class AutonomousCommandHelper {
     
     public static Command getPathPlannerCommand(DriveSubsystem driveSubsystem) {
         // An example trajectory to follow. All units in meters.
-        PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.loadPath("simple1", .5, .5);
+        PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.loadPath("simple1", .5, 1);
 
         if (kDebugMode) {
             double trajectoryLength = pathPlannerTrajectory.getTotalTimeSeconds();

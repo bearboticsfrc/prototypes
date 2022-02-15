@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.BlinkinSubsystem;
 import frc.robot.subsystems.MeasuredSubsystem;
 
 /**
@@ -62,6 +63,7 @@ public class Robot extends TimedRobot {
   @Override
   public void disabledInit() {
     DriverStation.reportWarning(MeasuredSubsystem.getStats(), false);
+    m_robotContainer.disabledInit();
   }
 
   @Override
@@ -74,6 +76,7 @@ public class Robot extends TimedRobot {
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
+    m_robotContainer.autonomousInit();
     /*
      * String autoSelected = SmartDashboard.getString("Auto Selector",
      * "Default"); switch(autoSelected) { case "My Auto": autonomousCommand
@@ -100,8 +103,8 @@ public class Robot extends TimedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    m_robotContainer.teleopInit();
     MeasuredSubsystem.resetAllStats();
-
   }
 
   /** This function is called periodically during operator control. */

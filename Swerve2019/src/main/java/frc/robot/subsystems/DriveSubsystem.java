@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.util.Map;
 
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
+import com.ctre.phoenix.sensors.PigeonIMU.PigeonState;
 
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -58,9 +59,18 @@ public class DriveSubsystem extends MeasuredSubsystem {
   private final SlewRateLimiter turningLimiter = new SlewRateLimiter(
       DriveConstants.kTeleDriveMaxAngularAccelerationUnitsPerSecond);
 
-  /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
+  private final BlinkinSubsystem m_blinkin;
 
+  /** Creates a new DriveSubsystem. */
+  public DriveSubsystem(BlinkinSubsystem blinkin) {
+    System.out.println("^^^^^^^^^^^^^^^^^^^^^ Gyro is " + (this.isGyroReady()? "Ready":"Not Ready"));
+    
+    m_blinkin = blinkin;
+    if ( this.isGyroReady() ) {
+      m_blinkin.set(BlinkinSubsystem.Color.GREEN);
+    } else {
+      m_blinkin.set(BlinkinSubsystem.Color.ORANGE);
+    }
     m_frontLeft = new SwerveModule(
         DriveConstants.kFrontLeftDriveMotorPort,
         DriveConstants.kFrontLeftTurningMotorPort,
@@ -115,14 +125,20 @@ public class DriveSubsystem extends MeasuredSubsystem {
     tab.addNumber("Pose Y", () -> m_odometry.getPoseMeters().getY());
     tab.addNumber("Pose rot", () -> m_odometry.getPoseMeters().getRotation().getDegrees());
   }
+
+  public boolean isGyroReady() {
+    return m_gyro.getState() == PigeonState.Ready;
+  }
   
   public void setTurboMode(boolean mode) {
     if (mode) {
       m_turboMode = true;
       m_maxSpeed = Math.min(m_maxSpeed*2.0, kMaxSpeed);
+      m_blinkin.set(BlinkinSubsystem.Color.RED);
     } else {
       m_turboMode = false;
       m_maxSpeed /= 2;
+      m_blinkin.set(m_blinkin.getPreviousColor());
     }
     maxSpeedEntry.setDouble(m_maxSpeed);
   }
@@ -133,6 +149,11 @@ public class DriveSubsystem extends MeasuredSubsystem {
 
   public void setFieldRelative(boolean mode) {
     m_fieldRelativeMode = mode;
+    if (!mode) {
+      m_blinkin.set(BlinkinSubsystem.Color.HOT_PINK);
+    } else {
+      m_blinkin.set(m_blinkin.getPreviousColor());
+    }
   }
 
   public boolean getFieldRelative() {

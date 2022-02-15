@@ -34,20 +34,16 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
  */
 public class RobotContainer {
   // The robot's subsystems
-  private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private final LimelightSubsystem m_limeLight = new LimelightSubsystem();
-
-  private BlinkinSubsystem m_blinkin = null;
+  private final DriveSubsystem m_robotDrive;
+  private final LimelightSubsystem m_limeLight;
+  private final BlinkinSubsystem m_blinkin;
 
   // The driver's controller
-  XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  private final XboxController m_driverController;
 
-  private final TargetDrive m_targetDrive = new TargetDrive(m_robotDrive,
-      m_limeLight,
-      m_driverController::getLeftY,
-      m_driverController::getLeftX);
-
-  private final AutoRotate m_autoRotate = new AutoRotate(m_robotDrive);
+  // Autonomous Routines
+  private final TargetDrive m_targetDrive;
+  private final AutoRotate m_autoRotate;
 
   // A chooser for autonomous commands
   SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -60,6 +56,11 @@ public class RobotContainer {
    */
   public RobotContainer() {
     m_blinkin = new BlinkinSubsystem(LEDConstants.kBlinkinPWMPort);
+    m_robotDrive = new DriveSubsystem(m_blinkin);
+    m_limeLight = new LimelightSubsystem();
+    m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+    m_targetDrive = new TargetDrive(m_robotDrive, m_limeLight, m_blinkin, m_driverController::getLeftY, m_driverController::getLeftX);
+    m_autoRotate = new AutoRotate(m_robotDrive);
 
     // Configure the button bindings
     configureButtonBindings();
@@ -147,6 +148,22 @@ public class RobotContainer {
     m_autoModeSupplier = autoModeSupplier;
   }
 
+  public BlinkinSubsystem getBlinkin() {
+    return m_blinkin;
+  }
+
+  public void autonomousInit() {
+    m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
+  }
+
+  public void teleopInit() {
+    m_blinkin.set(BlinkinSubsystem.Color.BLUE);
+  }
+
+  public void disabledInit() {
+    m_blinkin.set(BlinkinSubsystem.Color.BLUE_VIOLET);
+  }
+
   public void periodic() {
     if (m_targetDrive.isScheduled() && !m_limeLight.valid()) {
       //m_driverController.setRumble(RumbleType.kLeftRumble, 0.25);
@@ -154,24 +171,20 @@ public class RobotContainer {
       //m_driverController.setRumble(RumbleType.kLeftRumble, 0.0);
     }
 
-    if (!m_robotDrive.getFieldRelative()) {
-      m_blinkin.set(BlinkinSubsystem.Color.HOT_PINK);
-    } else {
-      if (m_robotDrive.getTurboMode()) {
-        m_blinkin.set(BlinkinSubsystem.Color.RED);
-      } else {
-        if (m_autoModeSupplier.getAsBoolean()) {
-          // Autonomous Mode
-          m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
-        } else {
-          if (m_targetDrive.isScheduled()) {
-            m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
-          } else {
-            m_blinkin.set((BlinkinSubsystem.Color.BLUE));
-          }
-        }
-      }
-    }
+    //if (!m_robotDrive.getFieldRelative()) {
+    //  m_blinkin.set(BlinkinSubsystem.Color.HOT_PINK);
+    //} else {
+    //  if (m_autoModeSupplier.getAsBoolean()) {
+        // Autonomous Mode
+    //    m_blinkin.set(BlinkinSubsystem.Color.STROBE_BLUE);
+    //  } else {
+        //if (m_targetDrive.isScheduled()) {
+        //  m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
+        //} else {
+         // m_blinkin.set((BlinkinSubsystem.Color.BLUE));
+    //    }
+    //  }
+    //}
   }
 
 }

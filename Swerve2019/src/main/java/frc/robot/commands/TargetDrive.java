@@ -11,12 +11,14 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants.AutoConstants;
+import frc.robot.subsystems.BlinkinSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
 
 public class TargetDrive extends CommandBase {
   private DriveSubsystem m_driveSubsystem;
   private LimelightSubsystem m_limeLight;
+  private BlinkinSubsystem m_blinkin;
 
   private DoubleSupplier m_xSupplier;
   private DoubleSupplier m_ySupplier;
@@ -27,10 +29,12 @@ public class TargetDrive extends CommandBase {
   /** Creates a new TargetDrive. */
   public TargetDrive(DriveSubsystem driveSubsystem,
       LimelightSubsystem limeLight,
+      BlinkinSubsystem blinkinSubsystem,
       DoubleSupplier ySupplier,
       DoubleSupplier xSupplier) {
 
     m_driveSubsystem = driveSubsystem;
+    m_blinkin = blinkinSubsystem;
     m_limeLight = limeLight;
     m_xSupplier = xSupplier;
     m_ySupplier = ySupplier;
@@ -42,6 +46,7 @@ public class TargetDrive extends CommandBase {
   @Override
   public void initialize() {
     m_limeLight.enableLED();
+    m_blinkin.set(BlinkinSubsystem.Color.YELLOW);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -69,6 +74,7 @@ public class TargetDrive extends CommandBase {
   @Override
   public void end(boolean interrupted) {
     m_limeLight.disableLED();
+    m_blinkin.set(m_blinkin.getPreviousColor());
   }
 
   // Returns true when the command should end.
