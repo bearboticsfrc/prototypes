@@ -6,6 +6,7 @@ package frc.robot;
 
 import java.util.function.BooleanSupplier;
 
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
@@ -22,6 +23,7 @@ import frc.robot.commands.TargetDrive;
 import frc.robot.subsystems.BlinkinSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -122,12 +124,15 @@ public class RobotContainer {
         .whenPressed(() -> m_robotDrive.setFieldRelative(false))
         .whenReleased(() -> m_robotDrive.setFieldRelative(true));
 
+    new Trigger(() -> { return m_driverController.getRightTriggerAxis() > 0.75;})
+        .whenActive(() -> m_robotDrive.setTurboMode(true))
+        .whenInactive(() -> m_robotDrive.setTurboMode(false));
   }
 
   private void configureTriggers() {
 
-    // new Trigger(m_targetDrive::isScheduled)
-    //     .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.YELLOW))
+   //  new Trigger(m_targetDrive::isScheduled)
+   //     .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.YELLOW))
     //     .whenInactive(() -> m_blinkin.set(BlinkinSubsystem.Color.BLUE));
     // new Trigger(m_robotDrive::getTurboMode)
     //     .whenActive(() -> m_blinkin.set(BlinkinSubsystem.Color.RED));

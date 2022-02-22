@@ -20,7 +20,8 @@ public class AutoRotate extends CommandBase {
 
   private final PIDController m_turnPIDController = new PIDController(0.01, 0, 0);
 
-  private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 0.0);
+  //private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 0.0);
+  private List<Double> m_degreeSetPoints = Arrays.asList(90.0, 180.0, 270.0, 0.0,90.0, 180.0, 270.0, 0.0);
   private int m_step = 0;
   private double m_offset = 0.0;
 
@@ -30,6 +31,7 @@ public class AutoRotate extends CommandBase {
     m_driveSubsystem = driveSubsystem;
     
     ShuffleboardTab tab = Shuffleboard.getTab("Auto Rotate");
+    tab.addNumber("index", () ->{return m_degreeSetPoints.get(m_step).intValue();});
     tab.addNumber("SetPoint", () -> this.getSetPoint());
     tab.addNumber("Error", () -> this.getError());
     tab.addNumber("Degrees Off", () -> {return m_driveSubsystem.getHeading() - this.getSetPoint();});

@@ -68,9 +68,9 @@ public final class Constants {
     public enum PivotPoint {
       CENTER(new Translation2d(0.0, 0.0)),
       FRONT_LEFT(new Translation2d(kWheelBase / 2, kTrackWidth / 2)),
-      FRONT_RIGHT(new Translation2d(-kWheelBase / 2, kTrackWidth / 2)),
-      BACK_RIGHT(new Translation2d(kWheelBase / 2, -kTrackWidth / 2)),
-      BACK_LEFT(new Translation2d(-kWheelBase / 2, -kTrackWidth / 2));
+      BACK_LEFT(new Translation2d(-kWheelBase / 2, kTrackWidth / 2)),
+      FRONT_RIGHT(new Translation2d(kWheelBase / 2, -kTrackWidth / 2)),
+      BACK_RIGHT(new Translation2d(-kWheelBase / 2, -kTrackWidth / 2));
 
       private final Translation2d m_pivotPoint;
 

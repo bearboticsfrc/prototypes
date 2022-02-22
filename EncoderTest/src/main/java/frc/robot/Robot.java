@@ -4,6 +4,10 @@
 
 package frc.robot;
 
+import com.ctre.phoenix.sensors.AbsoluteSensorRange;
+import com.ctre.phoenix.sensors.CANCoderConfiguration;
+import com.ctre.phoenix.sensors.WPI_CANCoder;
+
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
@@ -31,6 +35,8 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    addCanEncodersTest();
   }
 
   /**
@@ -120,17 +126,59 @@ public class Robot extends TimedRobot {
     tab.addNumber("BR 1", () -> encoder4.getAbsolutePosition());
     tab.addNumber("BR 2", () -> encoder4.getAbsolutePosition2());
   }
+   
+  public void addCanEncodersTest() {
+    WPI_CANCoder encoder1 = new WPI_CANCoder(DriveConstants.kFrontLeftTurningCanPort);
+    WPI_CANCoder encoder2 = new WPI_CANCoder(DriveConstants.kBackLeftTurningCanPort);
+    WPI_CANCoder encoder3 = new WPI_CANCoder(DriveConstants.kFrontRightTurningCanPort);
+    WPI_CANCoder encoder4 = new WPI_CANCoder(DriveConstants.kBackRightTurningCanPort);
+
+    CANCoderConfiguration config = new CANCoderConfiguration();
+    config.absoluteSensorRange = AbsoluteSensorRange.Unsigned_0_to_360;
+    config.magnetOffsetDegrees = -DriveConstants.kFrontLeftEncoderAngle;
+    config.sensorDirection = false;
+    encoder1.configAllSettings(config, 250);
+
+    config.magnetOffsetDegrees = -DriveConstants.kBackLeftEncoderAngle;
+    encoder2.configAllSettings(config, 250);
+    config.magnetOffsetDegrees = -DriveConstants.kFrontRightEncoderAngle;
+    encoder3.configAllSettings(config, 250);
+    config.magnetOffsetDegrees = -DriveConstants.kBackRightEncoderAngle;
+    encoder4.configAllSettings(config, 250);
+
+
+
+    ShuffleboardTab tab = Shuffleboard.getTab("Encoders");
+
+    tab.addNumber("FL 1", () -> encoder1.getAbsolutePosition());
+
+    tab.addNumber("BL 1", () -> encoder2.getAbsolutePosition());
+
+    tab.addNumber("FR 1", () -> encoder3.getAbsolutePosition());
+
+    tab.addNumber("BR 1", () -> encoder4.getAbsolutePosition());
+  }
   
   public static final class DriveConstants {
-   public static final int kFrontLeftTurningInputPort = 3;
-   public static final int kBackLeftTurningInputPort = 1;
-   public static final int kFrontRightTurningInputPort = 2;
-   public static final int kBackRightTurningInputPort = 0;
+    public static final int kFrontLeftTurningCanPort = 28;
+    public static final int kBackLeftTurningCanPort = 25;
+    public static final int kFrontRightTurningCanPort = 26;
+    public static final int kBackRightTurningCanPort = 27;
+ 
+    public static final int kFrontLeftTurningInputPort = 3;
+    public static final int kBackLeftTurningInputPort = 1;
+    public static final int kFrontRightTurningInputPort = 2;
+    public static final int kBackRightTurningInputPort = 0;
+ 
+    //public static final double kFrontLeftEncoderAngle = 184.57 +0.087; 
+    //public static final double kBackLeftEncoderAngle =  140.53+0.087;  
+    //public static final double kFrontRightEncoderAngle = 24.52+0.087; 
+    //public static final double kBackRightEncoderAngle = 220.34+0.087; 
 
-   public static final double kFrontLeftEncoderAngle = 94.6; 
-   public static final double kBackLeftEncoderAngle =  32.42;  
-   public static final double kFrontRightEncoderAngle = 114.73; 
-   public static final double kBackRightEncoderAngle = 292.65; 
+    public static final double kFrontLeftEncoderAngle =  349.1; //  1.493; 
+    public static final double kBackLeftEncoderAngle =   207.948;//304.54;  
+    public static final double kFrontRightEncoderAngle = 11.688; 
+    public static final double kBackRightEncoderAngle =65.37; 
   }
 
  }
