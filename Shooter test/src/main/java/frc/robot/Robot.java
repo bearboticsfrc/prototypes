@@ -7,15 +7,23 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMaxLowLevel;
+import static frc.robot.util.RevUtil.checkRevError;
+
+import edu.wpi.first.math.filter.LinearFilter;
 
 /**
  * This is a demo program showing the use of the RobotDrive class, specifically
@@ -27,25 +35,25 @@ public class Robot extends TimedRobot {
   private static final int MotorID2 = 17;
   private static final int FeederMotorID = 18;
   private static final int hopperMotorID = 12;
-  private static final int gateMotorID = 2;
   private CANSparkMax m_motor;
   private CANSparkMax m_motortwo;
   private CANSparkMax m_feedermotor;
   private CANSparkMax m_hopperMotor;
-  private CANSparkMax m_gateMotor;
   private SparkMaxPIDController m_pidController;
+
+  private Encoder m_magEncoder;
+
+  private PIDController m_roboRiopidController;
   private RelativeEncoder m_encoder;
   private RelativeEncoder m_encoder2;
   public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, targetRPM;
 
+  private Timer timer = new Timer();
 
-  private static final int hood_deviceID = 19;
-  private CANSparkMax m_motor_hood;
-  private SparkMaxPIDController m_pidController_hood;
+  private LinearFilter filter = LinearFilter.movingAverage(20);
 
-  private RelativeEncoder m_encoder_hood;
-  public double kP_hood, kI_hood, kD_hood, kIz_hood, kFF_hood, kMaxOutput_hood, kMinOutput_hood;
-
+  private double filteredVelocity = 0.0;
+  
   @Override
   public void robotInit() {
     m_stick = new XboxController(0);
@@ -55,16 +63,40 @@ public class Robot extends TimedRobot {
     m_motortwo = new CANSparkMax(MotorID2, MotorType.kBrushless);
     m_feedermotor = new CANSparkMax(FeederMotorID, MotorType.kBrushless);
     m_hopperMotor = new CANSparkMax(hopperMotorID, MotorType.kBrushless);
-    m_gateMotor = new CANSparkMax(gateMotorID, MotorType.kBrushless);
+
+    m_magEncoder = new Encoder(5,6,true,EncodingType.k1X);
+    m_magEncoder.setSamplesToAverage(60);
+
+    m_magEncoder.setDistancePerPulse((1.0/1024.0)*60.0);
     /**
      * The RestoreFactoryDefaults method can be used to reset the configuration parameters
      * in the SPARK MAX to their factory default state. If no argument is passed, these
      * parameters will not persist between power cycles
      */
-    m_motor.restoreFactoryDefaults();
-    m_motortwo.restoreFactoryDefaults();
-    m_feedermotor.restoreFactoryDefaults();
-    m_gateMotor.restoreFactoryDefaults();
+    //m_motor.restoreFactoryDefaults();
+    //m_motortwo.restoreFactoryDefaults();
+    //m_feedermotor.restoreFactoryDefaults();
+    checkRevError(m_motor.enableVoltageCompensation(12.0), "Could not enableVoltageCompensation for shooter motor one.");
+    checkRevError(m_motortwo.enableVoltageCompensation(12.0), "Could not enableVoltageCompensation for shooter motor two.");
+    checkRevError(m_motor.setIdleMode(IdleMode.kCoast), "Could not set idle mode for shooter motor one.");
+    checkRevError(m_motortwo.setIdleMode(IdleMode.kCoast), "Could not set idle mode for shooter motor two.");
+
+    m_motor.setIdleMode(IdleMode.kCoast);
+    m_motortwo.follow(m_motor, true);
+
+    m_motor.setClosedLoopRampRate(0.005);
+
+    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10), "Failed to set periodic status frame 0 rate");
+    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 10), "Failed to set periodic status frame 1 rate");
+    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 100), "Failed to set periodic status frame 2 rate");
+    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 100), "Failed to set periodic status frame 3 rate");
+
+    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10), "Failed to set periodic status frame 0 rate");
+    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 10), "Failed to set periodic status frame 1 rate");
+    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 100), "Failed to set periodic status frame 2 rate");
+    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 100), "Failed to set periodic status frame 3 rate");
+
+
     /**
      * In order to use PID functionality for a controller, a SparkMaxPIDController object
      * is constructed by calling the getPIDController() method on an existing
@@ -72,23 +104,27 @@ public class Robot extends TimedRobot {
      */
     m_pidController = m_motor.getPIDController();
 
+
     // Encoder object created to display position values
     m_encoder = m_motor.getEncoder();
     m_encoder2 = m_motortwo.getEncoder();
 
-    m_motortwo.follow(m_motor, true);
-    
+    //private final double kP = 0.000055; //0.0001; //0.00004; // was 0.00006;
+    //private final double kI = 0.0000005;
+   
 
     // PID coefficients
-    kP = 6e-5; 
-    kI = 0;
-    kD = 0; 
-    kIz = 0; 
-    kFF = 0.00018;// 0.000015; 
+    kP = 0.0001; 
+    kI = 0.00000007;
+    kD = 0.000000008; 
+    kIz = 400; 
+    kFF = 0.000168; // 0.0001745;// 0.000015; 
     kMaxOutput = 1; 
     kMinOutput = -1;
     maxRPM = 5700;
     targetRPM = 0;
+
+    m_roboRiopidController = new PIDController(kP,kI,kD);
 
     // set PID coefficients
     m_pidController.setP(kP);
@@ -107,8 +143,9 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Max Output", kMaxOutput);
     SmartDashboard.putNumber("Min Output", kMinOutput);
     SmartDashboard.putNumber("targetRPM", targetRPM);
+    SmartDashboard.putNumber("srxEncoder", m_magEncoder.getRate());
 
-    initHood();
+
   }
 
   @Override
@@ -116,9 +153,9 @@ public class Robot extends TimedRobot {
 
     m_feedermotor.set(m_stick.getRightY()/2);
     m_hopperMotor.set(-m_stick.getRightY());
-    m_gateMotor.set(m_stick.getRightY());
 
-    hoodPeriodic();
+
+
     // read PID coefficients from SmartDashboard
     double p = SmartDashboard.getNumber("P Gain", 0);
     double i = SmartDashboard.getNumber("I Gain", 0);
@@ -127,7 +164,17 @@ public class Robot extends TimedRobot {
     double ff = SmartDashboard.getNumber("Feed Forward", 0);
     double max = SmartDashboard.getNumber("Max Output", 0);
     double min = SmartDashboard.getNumber("Min Output", 0);
-    double targetRPMb = SmartDashboard.getNumber("targetRPM", 0);
+
+    double targetRPM = 0.0;
+
+    if ( m_stick.getAButton() ) {
+      targetRPM = SmartDashboard.getNumber("targetRPM", 0);
+      if ( timer.get() == 0.0 ) {
+        timer.start();
+      }
+    } else {
+      timer.reset();
+    }
 
     // if PID coefficients on SmartDashboard have changed, write new values to controller
     if((p != kP)) { m_pidController.setP(p); kP = p; }
@@ -154,132 +201,39 @@ public class Robot extends TimedRobot {
      *  com.revrobotics.CANSparkMax.ControlType.kVelocity
      *  com.revrobotics.CANSparkMax.ControlType.kVoltage
      */
-    double setPoint = m_stick.getLeftY()*maxRPM;
-    m_pidController.setReference(targetRPMb, CANSparkMax.ControlType.kVelocity);
+    //double setPoint = m_stick.getLeftY()*maxRPM;
+    if ( targetRPM == 0.0 ) {
+      m_motor.set(0.0);
+    } else {
+      m_pidController.setReference(targetRPM, CANSparkMax.ControlType.kVelocity);
+    }
+
+    //m_roboRiopidController.setSetpoint(targetRPM);
+    //double value = m_roboRiopidController.calculate( m_magEncoder.getRate() );
+
+    //value += kFF * targetRPMb;
+    //SmartDashboard.putNumber("motor value", value);
+
+   // m_motor.set(value);
+
     //m_motor.set(m_stick.getLeftY());
 
+    filteredVelocity = filter.calculate(m_encoder.getVelocity());
+
+    if ( Math.abs(targetRPM-filteredVelocity) < 10.0) {
+      timer.stop();
+    }
     
-    SmartDashboard.putNumber("SetPoint", setPoint);
+    //SmartDashboard.putNumber("SetPoint", setPoint);
+    SmartDashboard.putNumber("timer", timer.get());
     SmartDashboard.putNumber("motor 1", m_encoder.getVelocity());
-    SmartDashboard.putNumber("motor 2", m_encoder2.getVelocity());
+    SmartDashboard.putNumber("filtered vel", filteredVelocity);
+    SmartDashboard.putNumber("motor1Output", m_motor.getAppliedOutput());
+    SmartDashboard.putNumber("srxEncoder", m_magEncoder.getRate());
+    SmartDashboard.putBoolean("AtVelocity", (Math.abs(targetRPM-filteredVelocity)<10.0));
   }
 
 
 
-  public void initHood() {
-    // initialize motor
-    m_motor_hood = new CANSparkMax(hood_deviceID, MotorType.kBrushless);
-
-    /**
-     * The RestoreFactoryDefaults method can be used to reset the configuration parameters
-     * in the SPARK MAX to their factory default state. If no argument is passed, these
-     * parameters will not persist between power cycles
-     */
-    m_motor_hood.restoreFactoryDefaults();
-
-    m_pidController_hood = m_motor_hood.getPIDController();
-
-
-    // Encoder object created to display position values
-    m_encoder_hood = m_motor_hood.getEncoder();
-
-    m_encoder_hood.setPosition(0.0);
-    
-      // PID coefficients
-      kP_hood = 0.1; 
-      kI_hood = 1e-4;
-      kD_hood = 1; 
-      kIz_hood = 0; 
-      kFF_hood = 0; 
-      kMaxOutput_hood = 1; 
-      kMinOutput_hood = -1;
   
-      // set PID coefficients
-      m_pidController_hood.setP(kP_hood);
-      m_pidController_hood.setI(kI_hood);
-      m_pidController_hood.setD(kD_hood);
-      m_pidController_hood.setIZone(kIz_hood);
-      m_pidController_hood.setFF(kFF_hood);
-      m_pidController_hood.setOutputRange(kMinOutput_hood, kMaxOutput_hood);
-  
-      // display PID coefficients on SmartDashboard
-    //  SmartDashboard.putNumber("P Gain", kP_hood);
-    //  SmartDashboard.putNumber("I Gain", kI_hood);
-    //  SmartDashboard.putNumber("D Gain", kD_hood);
-    //  SmartDashboard.putNumber("I Zone", kIz_hood);
-    //  SmartDashboard.putNumber("Feed Forward", kFF_hood);
-    //  SmartDashboard.putNumber("Max Output", kMaxOutput_hood);
-      SmartDashboard.putNumber("Min Output", kMinOutput_hood);
-      SmartDashboard.putNumber("Set Hood Rotations", 0);
-   
-  }
-
-  
-  public void hoodPeriodic() {
-
-    // read PID coefficients from SmartDashboard
-    //double p = SmartDashboard.getNumber("P Gain", 0);
-    //double i = SmartDashboard.getNumber("I Gain", 0);
-    //double d = SmartDashboard.getNumber("D Gain", 0);
-    //double iz = SmartDashboard.getNumber("I Zone", 0);
-    //double ff = SmartDashboard.getNumber("Feed Forward", 0);
-    //double max = SmartDashboard.getNumber("Max Output", 0);
-    //double min = SmartDashboard.getNumber("Min Output", 0);
-    double rotations = SmartDashboard.getNumber("Set Hood Rotations", 0);
-
-    // if PID coefficients on SmartDashboard have changed, write new values to controller
-    //if((p != kP)) { m_pidController.setP(p); kP = p; }
-    //if((i != kI)) { m_pidController.setI(i); kI = i; }
-    //if((d != kD)) { m_pidController.setD(d); kD = d; }
-    //if((iz != kIz)) { m_pidController.setIZone(iz); kIz = iz; }
-    //if((ff != kFF)) { m_pidController.setFF(ff); kFF = ff; }
-    //if((max != kMaxOutput) || (min != kMinOutput)) { 
-    //  m_pidController.setOutputRange(min, max); 
-    //  kMinOutput = min; kMaxOutput = max; 
-    //}
-
-
-
-    /**
-     * PIDController objects are commanded to a set point using the 
-     * SetReference() method.
-     * 
-     * The first parameter is the value of the set point, whose units vary
-     * depending on the control type set in the second parameter.
-     * 
-     * The second parameter is the control type can be set to one of four 
-     * parameters:
-     *  com.revrobotics.CANSparkMax.ControlType.kDutyCycle
-     *  com.revrobotics.CANSparkMax.ControlType.kPosition
-     *  com.revrobotics.CANSparkMax.ControlType.kVelocity
-     *  com.revrobotics.CANSparkMax.ControlType.kVoltage
-     */
-    m_pidController_hood.setReference(rotations, CANSparkMax.ControlType.kPosition);
-    
-   // SmartDashboard.putNumber("SetPoint", rotations);
-   // SmartDashboard.putNumber("ProcessVariable", m_encoder.getPosition());
-
-/**
- * PIDController objects are commanded to a set point using the 
- * SetReference() method.
- * 
- * The first parameter is the value of the set point, whose units vary
- * depending on the control type set in the second parameter.
- * 
- * The second parameter is the control type can be set to one of four 
- * parameters:
- *  com.revrobotics.CANSparkMax.ControlType.kDutyCycle
- *  com.revrobotics.CANSparkMax.ControlType.kPosition
- *  com.revrobotics.CANSparkMax.ControlType.kVelocity
- *  com.revrobotics.CANSparkMax.ControlType.kVoltage
- */
-//  double setPoint = m_stick.getLeftY()*maxRPM;
- // m_motor.set(m_stick.getLeftY() / 2);
-//  
-//  SmartDashboard.putNumber("SetPoint", setPoint);
-//  SmartDashboard.putNumber("PositionVariable", m_encoder.getPosition());
-//start at 0, max = 21
-//negative for hood to extend
-}
-
 }

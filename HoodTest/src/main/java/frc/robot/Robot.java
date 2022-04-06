@@ -7,7 +7,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -32,6 +31,7 @@ public class Robot extends TimedRobot {
 
   @Override
   public void robotInit() {
+    initHood();
   }
 
   public void initHood() {
@@ -84,8 +84,39 @@ public class Robot extends TimedRobot {
    
   }
 
+  private boolean hoodIsHome = false;
   @Override
   public void teleopPeriodic() {
+    SmartDashboard.putNumber("Applied Output", m_motor.getAppliedOutput());
+    SmartDashboard.putNumber("encoder", m_encoder.getVelocity());
+    SmartDashboard.putNumber("Bus voltage", m_motor.getBusVoltage());
+    SmartDashboard.putNumber("output current", m_motor.getOutputCurrent());
+
+    if (m_stick.getAButton())
+      m_motor.set(-0.08);
+    else
+      m_motor.set(0.0);
+
+   if (m_stick.getBButton()) 
+      homeHood();
+  }
+
+  private boolean first = true;
+
+  private double initial_busVoltage = 0.0;
+  public void homeHood() {
+    if (hoodIsHome) return;
+    if (initial_busVoltage == 0.0 )
+       initial_busVoltage = m_motor.getBusVoltage();
+    m_motor.set(-0.08);
+    if ( m_motor.getOutputCurrent() > 10.0  && m_encoder.getVelocity() < 0.0001) {
+      SmartDashboard.putBoolean("HOME",true);
+      System.out.println("HOME!!!!!!");
+      m_motor.set(0.0);
+      m_motor.getEncoder().setPosition(0.0);
+      hoodIsHome = true;
+    }
+    first = false;
   }
 
   public void hoodPeriodic() {

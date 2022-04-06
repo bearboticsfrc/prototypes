@@ -93,9 +93,13 @@ public class AutonomousCommandHelper {
                 new InstantCommand(() -> driveSubsystem.stop()));
     }
     
+
+
+
+
     public static Command getPathPlannerCommand(DriveSubsystem driveSubsystem) {
         // An example trajectory to follow. All units in meters.
-        PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.loadPath("simple1", .5, 1);
+        PathPlannerTrajectory pathPlannerTrajectory = PathPlanner.loadPath("simple2", .5, 1);
 
         if (kDebugMode) {
             double trajectoryLength = pathPlannerTrajectory.getTotalTimeSeconds();
@@ -138,7 +142,8 @@ public class AutonomousCommandHelper {
         return new SequentialCommandGroup(
             new InstantCommand(() -> driveSubsystem.resetOdometry(new Pose2d(pathPlannerTrajectory.getInitialState().poseMeters.getTranslation(),
                                                                              pathPlannerTrajectory.getInitialState().holonomicRotation))),
-            autoCommand,
-            new InstantCommand(() -> driveSubsystem.stop()));    
+                autoCommand,
+            new InstantCommand(() -> driveSubsystem.stop()),
+            new InstantCommand(() -> driveSubsystem.headingOffest(pathPlannerTrajectory.getInitialState().holonomicRotation.getDegrees())));    
       }
 }

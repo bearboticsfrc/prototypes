@@ -175,10 +175,15 @@ public class Robot extends TimedRobot {
     //public static final double kFrontRightEncoderAngle = 24.52+0.087; 
     //public static final double kBackRightEncoderAngle = 220.34+0.087; 
 
-    public static final double kFrontLeftEncoderAngle =  349.1; //  1.493; 
-    public static final double kBackLeftEncoderAngle =   207.948;//304.54;  
-    public static final double kFrontRightEncoderAngle = 11.688; 
-    public static final double kBackRightEncoderAngle =65.37; 
+    //public static final double kFrontLeftEncoderAngle =  349.1; //  1.493; 
+    //public static final double kBackLeftEncoderAngle =   207.948;//304.54;  
+    //public static final double kFrontRightEncoderAngle = 11.688; 
+    //public static final double kBackRightEncoderAngle =65.37; 
+
+    public static final double kFrontLeftEncoderAngle =  0.0; //  1.493; 
+    public static final double kBackLeftEncoderAngle =  0.0;//304.54;  
+    public static final double kFrontRightEncoderAngle = 0.0; 
+    public static final double kBackRightEncoderAngle =0.0; 
   }
 
  }

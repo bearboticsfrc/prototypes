@@ -34,6 +34,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
 
   // The gyro sensor
   private final WPI_PigeonIMU m_gyro = new WPI_PigeonIMU(10);
+  private double m_gyroOffetDegrees = 0.0;
 
   private double kMaxSpeed = 3; // 3 meters per second
   private double m_maxSpeed = kMaxSpeed;
@@ -165,7 +166,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
   public void monitored_periodic() {
     // Update the odometry in the periodic block
     m_odometry.update(
-        m_gyro.getRotation2d(),
+        m_gyro.getRotation2d().plus(Rotation2d.fromDegrees(m_gyroOffetDegrees)),
         m_frontLeft.getState(),
         m_frontRight.getState(),
         m_backLeft.getState(),
@@ -266,7 +267,7 @@ public class DriveSubsystem extends MeasuredSubsystem {
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d())
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeed, ySpeed, rot, m_gyro.getRotation2d().plus(Rotation2d.fromDegrees(m_gyroOffetDegrees)))
             : new ChassisSpeeds(xSpeed, ySpeed, rot),
         m_pivotPoint.get());
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, m_maxSpeed);
@@ -306,8 +307,16 @@ public class DriveSubsystem extends MeasuredSubsystem {
 
   /** Zeroes the heading of the robot. */
   public void zeroHeading() {
+    m_gyroOffetDegrees = 0.0;
     m_gyro.reset();
   }
+
+ /** Zeroes the heading of the robot. */
+ public void headingOffest(double offsetDegrees) {
+   System.out.println("!!!!!!!!!!! Adding " + offsetDegrees);
+   m_gyroOffetDegrees = offsetDegrees;
+ // m_gyro.addFusedHeading(offsetDegrees);
+}
 
   /**
    * Returns the heading of the robot.

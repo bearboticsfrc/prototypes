@@ -23,6 +23,7 @@ import frc.robot.commands.TargetDrive;
 import frc.robot.subsystems.BlinkinSubsystem;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.LimelightSubsystem;
+import frc.robot.subsystems.TimeOfFlightSubsystem;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -40,6 +41,8 @@ public class RobotContainer {
   private final LimelightSubsystem m_limeLight;
   private final BlinkinSubsystem m_blinkin;
 
+
+  private final TimeOfFlightSubsystem m_timeOfFlight;
   // The driver's controller
   private final XboxController m_driverController;
 
@@ -64,6 +67,7 @@ public class RobotContainer {
     m_targetDrive = new TargetDrive(m_robotDrive, m_limeLight, m_blinkin, m_driverController::getLeftY, m_driverController::getLeftX);
     m_autoRotate = new AutoRotate(m_robotDrive);
 
+    m_timeOfFlight = new TimeOfFlightSubsystem();
     // Configure the button bindings
     configureButtonBindings();
     configureTriggers();
