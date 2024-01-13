@@ -7,21 +7,20 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.CounterBase.EncodingType;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.networktables.NetworkTableEntry;
 
+import com.revrobotics.CANSparkFlex;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMax.IdleMode;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import com.revrobotics.CANSparkMaxLowLevel;
+import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase.IdleMode;
+import com.revrobotics.CANSparkLowLevel.MotorType;
 import static frc.robot.util.RevUtil.checkRevError;
+
 
 import edu.wpi.first.math.filter.LinearFilter;
 
@@ -30,210 +29,95 @@ import edu.wpi.first.math.filter.LinearFilter;
  * it contains the code necessary to operate a robot with tank drive.
  */
 public class Robot extends TimedRobot {
-  private XboxController m_stick;
-  private static final int MotorID1 = 16;
-  private static final int MotorID2 = 17;
-  private static final int FeederMotorID = 18;
-  private static final int hopperMotorID = 12;
-  private CANSparkMax m_motor;
-  private CANSparkMax m_motortwo;
-  private CANSparkMax m_feedermotor;
-  private CANSparkMax m_hopperMotor;
-  private SparkMaxPIDController m_pidController;
+  private final ShuffleboardTab DRIVE_SHUFFLEBOARD_TAB = Shuffleboard.getTab("Drive");
+  private final XboxController driverController = new XboxController(0);
 
-  private Encoder m_magEncoder;
+  private final CANSparkFlex shooterMotor = new CANSparkFlex(16, MotorType.kBrushless);
+  private final CANSparkFlex shooterMotorFollower = new CANSparkFlex(17, MotorType.kBrushless);
+  private RelativeEncoder motorEncoder;
+  private SparkPIDController motorPidController;
 
-  private PIDController m_roboRiopidController;
-  private RelativeEncoder m_encoder;
-  private RelativeEncoder m_encoder2;
-  public double kP, kI, kD, kIz, kFF, kMaxOutput, kMinOutput, maxRPM, targetRPM;
+  private double p = 0.001;
+  private double i = 0.00000007; 
+  private double d = 0.000000008;
+  private double iz = 400;
+  private double ff = 0.000168;
+  private double maxOutput = 1;
+  private double minOutput = -1;
+  private int targetRpm = 0;
+
+  private NetworkTableEntry targetRpmEntry = DRIVE_SHUFFLEBOARD_TAB.add("targetRPM", targetRpm).getEntry();
 
   private Timer timer = new Timer();
-
   private LinearFilter filter = LinearFilter.movingAverage(20);
+  private double filteredVelocity = 0;
 
-  private double filteredVelocity = 0.0;
-  
   @Override
   public void robotInit() {
-    m_stick = new XboxController(0);
+    setupShooterMotors();
+    setupPidController();
+    setupShuffleboardTab();
+  }
 
-    // initialize motor
-    m_motor = new CANSparkMax(MotorID1, MotorType.kBrushless);
-    m_motortwo = new CANSparkMax(MotorID2, MotorType.kBrushless);
-    m_feedermotor = new CANSparkMax(FeederMotorID, MotorType.kBrushless);
-    m_hopperMotor = new CANSparkMax(hopperMotorID, MotorType.kBrushless);
+  private void setupShooterMotors() {
+    checkRevError(shooterMotor.enableVoltageCompensation(12.0));
+    checkRevError(shooterMotorFollower.enableVoltageCompensation(12.0));
+    checkRevError(shooterMotor.setIdleMode(IdleMode.kCoast));
+    checkRevError(shooterMotorFollower.setIdleMode(IdleMode.kCoast));
+    checkRevError(shooterMotorFollower.follow(shooterMotor, true));
+    checkRevError(shooterMotor.setClosedLoopRampRate(0.005));
 
-    m_magEncoder = new Encoder(5,6,true,EncodingType.k1X);
-    m_magEncoder.setSamplesToAverage(60);
+    motorEncoder = shooterMotor.getEncoder();
+  }
 
-    m_magEncoder.setDistancePerPulse((1.0/1024.0)*60.0);
-    /**
-     * The RestoreFactoryDefaults method can be used to reset the configuration parameters
-     * in the SPARK MAX to their factory default state. If no argument is passed, these
-     * parameters will not persist between power cycles
-     */
-    //m_motor.restoreFactoryDefaults();
-    //m_motortwo.restoreFactoryDefaults();
-    //m_feedermotor.restoreFactoryDefaults();
-    checkRevError(m_motor.enableVoltageCompensation(12.0), "Could not enableVoltageCompensation for shooter motor one.");
-    checkRevError(m_motortwo.enableVoltageCompensation(12.0), "Could not enableVoltageCompensation for shooter motor two.");
-    checkRevError(m_motor.setIdleMode(IdleMode.kCoast), "Could not set idle mode for shooter motor one.");
-    checkRevError(m_motortwo.setIdleMode(IdleMode.kCoast), "Could not set idle mode for shooter motor two.");
+  private void setupPidController() {
+    motorPidController = shooterMotor.getPIDController();
 
-    m_motor.setIdleMode(IdleMode.kCoast);
-    m_motortwo.follow(m_motor, true);
+    motorPidController.setP(p);
+    motorPidController.setI(i);
+    motorPidController.setD(d);
+    motorPidController.setIZone(iz);
+    motorPidController.setFF(ff);
+    motorPidController.setOutputRange(minOutput, maxOutput);
+  }
 
-    m_motor.setClosedLoopRampRate(0.005);
-
-    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10), "Failed to set periodic status frame 0 rate");
-    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 10), "Failed to set periodic status frame 1 rate");
-    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 100), "Failed to set periodic status frame 2 rate");
-    checkRevError(m_motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 100), "Failed to set periodic status frame 3 rate");
-
-    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0, 10), "Failed to set periodic status frame 0 rate");
-    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 10), "Failed to set periodic status frame 1 rate");
-    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 100), "Failed to set periodic status frame 2 rate");
-    checkRevError(m_motortwo.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 100), "Failed to set periodic status frame 3 rate");
-
-
-    /**
-     * In order to use PID functionality for a controller, a SparkMaxPIDController object
-     * is constructed by calling the getPIDController() method on an existing
-     * CANSparkMax object
-     */
-    m_pidController = m_motor.getPIDController();
-
-
-    // Encoder object created to display position values
-    m_encoder = m_motor.getEncoder();
-    m_encoder2 = m_motortwo.getEncoder();
-
-    //private final double kP = 0.000055; //0.0001; //0.00004; // was 0.00006;
-    //private final double kI = 0.0000005;
-   
-
-    // PID coefficients
-    kP = 0.0001; 
-    kI = 0.00000007;
-    kD = 0.000000008; 
-    kIz = 400; 
-    kFF = 0.000168; // 0.0001745;// 0.000015; 
-    kMaxOutput = 1; 
-    kMinOutput = -1;
-    maxRPM = 5700;
-    targetRPM = 0;
-
-    m_roboRiopidController = new PIDController(kP,kI,kD);
-
-    // set PID coefficients
-    m_pidController.setP(kP);
-    m_pidController.setI(kI);
-    m_pidController.setD(kD);
-    m_pidController.setIZone(kIz);
-    m_pidController.setFF(kFF);
-    m_pidController.setOutputRange(kMinOutput, kMaxOutput);
-
-    // display PID coefficients on SmartDashboard
-    SmartDashboard.putNumber("P Gain", kP);
-    SmartDashboard.putNumber("I Gain", kI);
-    SmartDashboard.putNumber("D Gain", kD);
-    SmartDashboard.putNumber("I Zone", kIz);
-    SmartDashboard.putNumber("Feed Forward", kFF);
-    SmartDashboard.putNumber("Max Output", kMaxOutput);
-    SmartDashboard.putNumber("Min Output", kMinOutput);
-    SmartDashboard.putNumber("targetRPM", targetRPM);
-    SmartDashboard.putNumber("srxEncoder", m_magEncoder.getRate());
-
-
+  private void setupShuffleboardTab() {
+    DRIVE_SHUFFLEBOARD_TAB.add("PID", motorPidController);
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Timer", () -> timer.get());
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Shooter Motor Velocity", motorEncoder::getVelocity);
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Filtered Velocity", () -> filteredVelocity);
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Shooter Motor Output", shooterMotor::getAppliedOutput);
+    DRIVE_SHUFFLEBOARD_TAB.addBoolean("AtVelocity?", this::atTargetVelocity);
   }
 
   @Override
   public void teleopPeriodic() {
+    double targetRPM = targetRpmEntry.getDouble(targetRpm);
 
-    m_feedermotor.set(m_stick.getRightY()/2);
-    m_hopperMotor.set(-m_stick.getRightY());
-
-
-
-    // read PID coefficients from SmartDashboard
-    double p = SmartDashboard.getNumber("P Gain", 0);
-    double i = SmartDashboard.getNumber("I Gain", 0);
-    double d = SmartDashboard.getNumber("D Gain", 0);
-    double iz = SmartDashboard.getNumber("I Zone", 0);
-    double ff = SmartDashboard.getNumber("Feed Forward", 0);
-    double max = SmartDashboard.getNumber("Max Output", 0);
-    double min = SmartDashboard.getNumber("Min Output", 0);
-
-    double targetRPM = 0.0;
-
-    if ( m_stick.getAButton() ) {
-      targetRPM = SmartDashboard.getNumber("targetRPM", 0);
-      if ( timer.get() == 0.0 ) {
+    if (driverController.getAButton() ) {
+      if (timer.get() == 0) {
         timer.start();
       }
     } else {
       timer.reset();
     }
 
-    // if PID coefficients on SmartDashboard have changed, write new values to controller
-    if((p != kP)) { m_pidController.setP(p); kP = p; }
-    if((i != kI)) { m_pidController.setI(i); kI = i; }
-    if((d != kD)) { m_pidController.setD(d); kD = d; }
-    if((iz != kIz)) { m_pidController.setIZone(iz); kIz = iz; }
-    if((ff != kFF)) { m_pidController.setFF(ff); kFF = ff; }
-    if((max != kMaxOutput) || (min != kMinOutput)) { 
-      m_pidController.setOutputRange(min, max); 
-      kMinOutput = min; kMaxOutput = max; 
-    }
-
-    /**
-     * PIDController objects are commanded to a set point using the 
-     * SetReference() method.
-     * 
-     * The first parameter is the value of the set point, whose units vary
-     * depending on the control type set in the second parameter.
-     * 
-     * The second parameter is the control type can be set to one of four 
-     * parameters:
-     *  com.revrobotics.CANSparkMax.ControlType.kDutyCycle
-     *  com.revrobotics.CANSparkMax.ControlType.kPosition
-     *  com.revrobotics.CANSparkMax.ControlType.kVelocity
-     *  com.revrobotics.CANSparkMax.ControlType.kVoltage
-     */
-    //double setPoint = m_stick.getLeftY()*maxRPM;
-    if ( targetRPM == 0.0 ) {
-      m_motor.set(0.0);
+    if (targetRPM == 0) {
+      shooterMotor.set(0);
     } else {
-      m_pidController.setReference(targetRPM, CANSparkMax.ControlType.kVelocity);
+      motorPidController.setReference(targetRPM, CANSparkFlex.ControlType.kVelocity);
     }
 
-    //m_roboRiopidController.setSetpoint(targetRPM);
-    //double value = m_roboRiopidController.calculate( m_magEncoder.getRate() );
+    filteredVelocity = filter.calculate(motorEncoder.getVelocity());
 
-    //value += kFF * targetRPMb;
-    //SmartDashboard.putNumber("motor value", value);
-
-   // m_motor.set(value);
-
-    //m_motor.set(m_stick.getLeftY());
-
-    filteredVelocity = filter.calculate(m_encoder.getVelocity());
-
-    if ( Math.abs(targetRPM-filteredVelocity) < 10.0) {
+    if (atTargetVelocity()) {
       timer.stop();
     }
-    
-    //SmartDashboard.putNumber("SetPoint", setPoint);
-    SmartDashboard.putNumber("timer", timer.get());
-    SmartDashboard.putNumber("motor 1", m_encoder.getVelocity());
-    SmartDashboard.putNumber("filtered vel", filteredVelocity);
-    SmartDashboard.putNumber("motor1Output", m_motor.getAppliedOutput());
-    SmartDashboard.putNumber("srxEncoder", m_magEncoder.getRate());
-    SmartDashboard.putBoolean("AtVelocity", (Math.abs(targetRPM-filteredVelocity)<10.0));
   }
 
-
+  private boolean atTargetVelocity() {
+    return Math.abs(targetRpm - filteredVelocity) < 10;
+  }
 
   
 }

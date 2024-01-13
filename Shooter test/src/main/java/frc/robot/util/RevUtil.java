@@ -4,25 +4,21 @@
 
 package frc.robot.util;
 
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVLibError;
-import com.revrobotics.CANSparkMaxLowLevel;
-
 import edu.wpi.first.wpilibj.DriverStation;
 
-/** Add your docs here. */
+/** Convenience methods for using the RevRobotics api. */
 public class RevUtil {
-   
-    public static void checkRevError(REVLibError error, String message) {
-        if (error != REVLibError.kOk) {
-            DriverStation.reportError(String.format("%s: %s", message, error.toString()), false);
-        }
-    }
 
-    public static void setPeriodicFramePeriodLow(CANSparkMax motor) {
-        checkRevError(motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus0,  50), "Failed to set periodic status frame 0 rate");
-        checkRevError(motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus1, 500), "Failed to set periodic status frame 1 rate");
-        checkRevError(motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus2, 500), "Failed to set periodic status frame 2 rate");
-        checkRevError(motor.setPeriodicFramePeriod(CANSparkMaxLowLevel.PeriodicFrame.kStatus3, 500), "Failed to set periodic status frame 3 rate");
+  /**
+   * Accepts a command that returns a REVLibError and if it is not "ok" then print an error to the
+   * driver station
+   *
+   * @param error A REVLibError from any REV API command
+   */
+  public static void checkRevError(REVLibError error) {
+    if (error != REVLibError.kOk) {
+      DriverStation.reportError(error.toString(), true);
     }
+  }
 }
