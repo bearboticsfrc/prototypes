@@ -12,11 +12,12 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.GenericEntry;
 
 import com.revrobotics.CANSparkFlex;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
+import com.revrobotics.CANSparkBase;
 import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.CANSparkLowLevel.MotorType;
 import static frc.robot.util.RevUtil.checkRevError;
@@ -32,8 +33,8 @@ public class Robot extends TimedRobot {
   private final ShuffleboardTab DRIVE_SHUFFLEBOARD_TAB = Shuffleboard.getTab("Drive");
   private final XboxController driverController = new XboxController(0);
 
-  private final CANSparkFlex shooterMotor = new CANSparkFlex(16, MotorType.kBrushless);
-  private final CANSparkFlex shooterMotorFollower = new CANSparkFlex(17, MotorType.kBrushless);
+  private CANSparkFlex motor = new CANSparkFlex(17, MotorType.kBrushless);
+  private final CANSparkFlex motorFollower = new CANSparkFlex(16, MotorType.kBrushless);
   private RelativeEncoder motorEncoder;
   private SparkPIDController motorPidController;
 
@@ -44,9 +45,9 @@ public class Robot extends TimedRobot {
   private double ff = 0.000168;
   private double maxOutput = 1;
   private double minOutput = -1;
-  private int targetRpm = 0;
+  private double targetRpm = 0;
 
-  private NetworkTableEntry targetRpmEntry = DRIVE_SHUFFLEBOARD_TAB.add("targetRPM", targetRpm).getEntry();
+  private GenericEntry targetRpmEntry = DRIVE_SHUFFLEBOARD_TAB.add("targetRPM", targetRpm).getEntry();
 
   private Timer timer = new Timer();
   private LinearFilter filter = LinearFilter.movingAverage(20);
@@ -60,18 +61,20 @@ public class Robot extends TimedRobot {
   }
 
   private void setupShooterMotors() {
-    checkRevError(shooterMotor.enableVoltageCompensation(12.0));
-    checkRevError(shooterMotorFollower.enableVoltageCompensation(12.0));
-    checkRevError(shooterMotor.setIdleMode(IdleMode.kCoast));
-    checkRevError(shooterMotorFollower.setIdleMode(IdleMode.kCoast));
-    checkRevError(shooterMotorFollower.follow(shooterMotor, true));
-    checkRevError(shooterMotor.setClosedLoopRampRate(0.005));
+    checkRevError(motor.restoreFactoryDefaults());
+    checkRevError(motorFollower.restoreFactoryDefaults());
+    checkRevError(motor.enableVoltageCompensation(12.0));
+    checkRevError(motorFollower.enableVoltageCompensation(12.0));
+    checkRevError(motor.setIdleMode(IdleMode.kCoast));
+    checkRevError(motorFollower.setIdleMode(IdleMode.kCoast));
+    checkRevError(motorFollower.follow(motor, true));
+    checkRevError(motor.setClosedLoopRampRate(0.005));
 
-    motorEncoder = shooterMotor.getEncoder();
+    motorEncoder = motor.getEncoder();
   }
 
   private void setupPidController() {
-    motorPidController = shooterMotor.getPIDController();
+    motorPidController = motor.getPIDController();
 
     motorPidController.setP(p);
     motorPidController.setI(i);
@@ -82,17 +85,23 @@ public class Robot extends TimedRobot {
   }
 
   private void setupShuffleboardTab() {
-    DRIVE_SHUFFLEBOARD_TAB.add("PID", motorPidController);
-    DRIVE_SHUFFLEBOARD_TAB.addNumber("Timer", () -> timer.get());
+    DRIVE_SHUFFLEBOARD_TAB.add("P", p);
+    DRIVE_SHUFFLEBOARD_TAB.add("I", i);
+    DRIVE_SHUFFLEBOARD_TAB.add("D", d);
+    DRIVE_SHUFFLEBOARD_TAB.add("Iz", iz);
+    DRIVE_SHUFFLEBOARD_TAB.add("FF", ff);
+    DRIVE_SHUFFLEBOARD_TAB.add("minOutput", minOutput);
+    DRIVE_SHUFFLEBOARD_TAB.add("maxOutput", maxOutput);
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Timer", timer::get);
     DRIVE_SHUFFLEBOARD_TAB.addNumber("Shooter Motor Velocity", motorEncoder::getVelocity);
     DRIVE_SHUFFLEBOARD_TAB.addNumber("Filtered Velocity", () -> filteredVelocity);
-    DRIVE_SHUFFLEBOARD_TAB.addNumber("Shooter Motor Output", shooterMotor::getAppliedOutput);
+    DRIVE_SHUFFLEBOARD_TAB.addNumber("Shooter Motor Output", motor::getAppliedOutput);
     DRIVE_SHUFFLEBOARD_TAB.addBoolean("AtVelocity?", this::atTargetVelocity);
   }
 
   @Override
   public void teleopPeriodic() {
-    double targetRPM = targetRpmEntry.getDouble(targetRpm);
+    targetRpm = targetRpmEntry.getDouble(targetRpm);
 
     if (driverController.getAButton() ) {
       if (timer.get() == 0) {
@@ -102,10 +111,10 @@ public class Robot extends TimedRobot {
       timer.reset();
     }
 
-    if (targetRPM == 0) {
-      shooterMotor.set(0);
+    if (targetRpm == 0) {
+      motor.set(0);
     } else {
-      motorPidController.setReference(targetRPM, CANSparkFlex.ControlType.kVelocity);
+      checkRevError(motorPidController.setReference(targetRpm, CANSparkBase.ControlType.kVelocity));
     }
 
     filteredVelocity = filter.calculate(motorEncoder.getVelocity());
@@ -118,6 +127,4 @@ public class Robot extends TimedRobot {
   private boolean atTargetVelocity() {
     return Math.abs(targetRpm - filteredVelocity) < 10;
   }
-
-  
 }
