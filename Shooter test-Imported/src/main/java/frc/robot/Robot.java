@@ -12,11 +12,9 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
-import edu.wpi.first.wpilibj.shuffleboard.SimpleWidget;
 import edu.wpi.first.networktables.GenericEntry;
 
 import com.revrobotics.CANSparkFlex;
-import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkPIDController;
 import com.revrobotics.CANSparkBase;
@@ -35,11 +33,12 @@ public class Robot extends TimedRobot {
   private final ShuffleboardTab DRIVE_SHUFFLEBOARD_TAB = Shuffleboard.getTab("Drive");
   private final XboxController driverController = new XboxController(0);
 
-  private CANSparkMax motor = new CANSparkMax(4, MotorType.kBrushless);
-  private final CANSparkMax motorFollower = new CANSparkMax(14, MotorType.kBrushless);
+  private final CANSparkFlex motor = new CANSparkFlex(4, MotorType.kBrushless);
+  private final CANSparkFlex motorFollower = new CANSparkFlex(14, MotorType.kBrushless);
   private RelativeEncoder motorEncoder;
   private SparkPIDController motorPidController;
 
+  private double targetRpm = 0;
   private double p = 0.0; // 0.001;
   private double i = 0.00001; // 0.00000007; 
   private double d = 0.000000008;
@@ -47,13 +46,18 @@ public class Robot extends TimedRobot {
   private double ff = 0.0; // 0.000147;
   private double maxOutput = 1;
   private double minOutput = -1;
-  private double targetRpm = 0;
 
   private GenericEntry targetRpmEntry = DRIVE_SHUFFLEBOARD_TAB.add("targetRPM", targetRpm).getEntry();
+  private GenericEntry pEntry = DRIVE_SHUFFLEBOARD_TAB.add("p", p).getEntry();
+  private GenericEntry iEntry = DRIVE_SHUFFLEBOARD_TAB.add("i", i).getEntry();
+  private GenericEntry dEntry = DRIVE_SHUFFLEBOARD_TAB.add("d", d).getEntry();
+  private GenericEntry izEntry = DRIVE_SHUFFLEBOARD_TAB.add("iz", iz).getEntry();
+  private GenericEntry ffEntry = DRIVE_SHUFFLEBOARD_TAB.add("ff", ff).getEntry();
 
   private Timer timer = new Timer();
   private LinearFilter filter = LinearFilter.movingAverage(20);
   private double filteredVelocity = 0;
+
 
   @Override
   public void robotInit() {
@@ -87,19 +91,7 @@ public class Robot extends TimedRobot {
     motorPidController.setOutputRange(minOutput, maxOutput);
   }
 
-  GenericEntry pEntry;
-  GenericEntry iEntry;
-  GenericEntry dEntry;
-  GenericEntry izEntry;
-  GenericEntry ffEntry;
-
-
   private void setupShuffleboardTab() {
-    pEntry = DRIVE_SHUFFLEBOARD_TAB.add("P", p).getEntry();
-    iEntry = DRIVE_SHUFFLEBOARD_TAB.add("I", i).getEntry();
-    dEntry = DRIVE_SHUFFLEBOARD_TAB.add("D", d).getEntry();
-    izEntry = DRIVE_SHUFFLEBOARD_TAB.add("Iz", iz).getEntry();
-    ffEntry = DRIVE_SHUFFLEBOARD_TAB.add("FF", ff).getEntry();
     DRIVE_SHUFFLEBOARD_TAB.add("minOutput", minOutput);
     DRIVE_SHUFFLEBOARD_TAB.add("maxOutput", maxOutput);
     DRIVE_SHUFFLEBOARD_TAB.addNumber("Timer", timer::get);
@@ -115,7 +107,7 @@ public class Robot extends TimedRobot {
     p = pEntry.get().getDouble();
     d = dEntry.get().getDouble();
     i = iEntry.get().getDouble();
-    iz= izEntry.get().getDouble();
+    iz = izEntry.get().getDouble();
     ff = ffEntry.get().getDouble();
   }
 
@@ -132,7 +124,6 @@ public class Robot extends TimedRobot {
 
     if (driverController.getAButton() ) {
       if (timer.get() == 0) {
-        //checkRevError(motorPidController.setReference(targetRpm, CANSparkBase.ControlType.kVelocity));
         timer.start();
       }
     } else {
